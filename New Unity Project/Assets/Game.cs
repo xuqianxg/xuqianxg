@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Game 
+public class Game
 {
-    
-
+    public static float PuKeSpacing = 20;
+    public static Player Pesant1;
+    public static Player Pesant2;
+    public static Player Landlord;
 }
 
 public enum DIRECTION
@@ -14,58 +16,63 @@ public enum DIRECTION
     WEST,
     SOUTH,
 }
+
+public enum STATUS
+{
+    PERSANT1,
+    PERSANT2,
+    LANDLORD,
+}
 public class Player
 {
     List<PuKe> list = new List<PuKe>();
-    Vector3 centrePos;
+    STATUS status;
     PlayerControl playerControl;
-    DIRECTION direction;
-    public Player(DIRECTION di)
+    public Player(DIRECTION di, STATUS s ,GameObject go)
     {
-        if(di==DIRECTION.EAST)
+        Vector3 centrePos = Vector4.zero;
+        status = s;
+        Quaternion quaternion = new Quaternion();
+        if (di == DIRECTION.EAST)
         {
-            centrePos = new Vector3(-250, 0, 0);
+            centrePos = new Vector3(-390, 100, 0);
+            quaternion = new Quaternion(0, 0, 90, 0);
         }
-        if(di==DIRECTION.WEST)
+        if (di == DIRECTION.WEST)
         {
-            centrePos = new Vector3(250, 0, 0);
+            centrePos = new Vector3(390,100, 0);
+            quaternion = new Quaternion(0, 0, 90, 0);
         }
-        if(di==DIRECTION.SOUTH)
+        if (di == DIRECTION.SOUTH)
         {
-            centrePos = new Vector3(0, -250, 0);
+            centrePos = new Vector3(0, -330, 0);
+            quaternion = new Quaternion(0, 0, 0, 0);
         }
-        direction = di;
-    }
-    public void Remove(string name)
-    {
-
-    }
-    public void Add(string name)
-    {
-        GameObject prefab = ResLoader.Load("Puke") as GameObject;
-        GameObject puke =  NGUITools.AddChild(playerControl.gameObject, prefab);
-        UISprite sprite = puke.GetComponent<UISprite>();
-        sprite.spriteName = name;
-        sprite.MarkAsChanged();
-        if(direction==DIRECTION.SOUTH)
-        {
-            puke.transform.localRotation=new Quaternion(0,0,90,0);
-        }
-        if(list.Count==0)
-        {
-            puke.transform.localPosition = centrePos;
-
-        }
-        puke.SetActive(true);
-        Vector3 curPosition = list[list.Count - 1].transform.localPosition;
-
+        GameObject prefab = ResLoader.Load("Prefab/Player") as GameObject;
+        GameObject player = NGUITools.AddChild(go, prefab);
+        player.transform.localRotation = quaternion;
+        player.transform.localPosition = centrePos;
+        playerControl = player.GetComponent<PlayerControl>();
 
     }
+    void InstancePlayer(GameObject go)
+    {
+        GameObject prefab = ResLoader.Load("Player") as GameObject;
+        GameObject player = NGUITools.AddChild(go, prefab);
+        playerControl = player.GetComponent<PlayerControl>();
+    }
+    public PlayerControl PlayerCtr
+    {
+        get { return playerControl; }
+    }
+
 }
 
 public class PukeSingle
 {
     string name;
 }
+
+
 
 
