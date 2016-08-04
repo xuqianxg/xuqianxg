@@ -76,14 +76,14 @@ public class Game
 }
 public enum STYLE
 {
-    HEITAO,
-    HONGXIN,
     MEIHUA,
     FANGKUA,
+    HONGXIN,
+    HEITAO,
     DAWANG,
     XIAOWANG,
 }
-public class poker
+public class poker :IComparable
 {
 
     public int Value;
@@ -93,7 +93,53 @@ public class poker
         Style = s;
         Value = v;
     }
+    public static bool operator ==(poker p1,poker p2)
+    {
+        return p1.Value == p2.Value;
 
+    }
+
+    public static bool operator !=(poker p1, poker p2)
+    {
+        return p1.Value != p2.Value;
+    }
+    public static bool operator >(poker p1, poker p2)
+    {
+        if(p1.Value == p2.Value)
+        {
+            return p1.Style > p2.Style;
+        }
+        if (p1.Value == 0) return true;
+        if (p2.Value == 0) return false;
+        if (p1.Value < 3 && p2.Value > 2)
+        {
+            return true;
+        }
+        if (p1.Value > 2 && p2.Value < 3)
+        {
+            return false;
+        }
+        else
+        {
+            return p1.Value > p2.Value;
+        }
+        //return p1.Value > p2.Value;
+    }
+    public static bool operator <(poker p1, poker p2)
+    {
+        if (p1.Value == p2.Value)
+        {
+            return p1.Style < p2.Style;
+        }
+        return p2>p1;
+    }
+    public int CompareTo(object o)
+    {
+        poker p = o as poker;
+        if (this > p) return 1;
+        if (this < p) return -1;
+        return 0;
+    }
 }
 
 public enum DIRECTION
@@ -109,6 +155,19 @@ public enum STATUS
     PERSANT2,
     LANDLORD,
     NONE,
+}
+
+public enum POKERCOMBINATION
+{
+    SHUNZI,
+    SANDAIYI,
+    SANDAIER,
+    SAN,
+    DUIZI,
+    SINGLE,
+    FEIJI,
+    ZHADAN,
+
 }
 public class Player
 {
@@ -126,47 +185,14 @@ public class Player
     {
         get { return pokers; }
     }
-     public Player(DIRECTION di)
+    public Player(DIRECTION di)
     {
-
+        direction = di;
     }
-
-//     public Player(DIRECTION di, GameObject go)
-//     {
-//         Vector3 centrePos = Vector4.zero;
-// 
-//         Quaternion quaternion = new Quaternion();
-//         if (di == DIRECTION.EAST)
-//         {
-//             centrePos = new Vector3(-390, 100, 0);
-//             quaternion = new Quaternion(0, 0, 90, 0);
-//         }
-//         if (di == DIRECTION.WEST)
-//         {
-//             centrePos = new Vector3(390,100, 0);
-//             quaternion = new Quaternion(0, 0, 90, 0);
-//         }
-//         if (di == DIRECTION.SOUTH)
-//         {
-//             centrePos = new Vector3(0, -330, 0);
-//             quaternion = new Quaternion(0, 0, 0, 0);
-//         }
-//         GameObject prefab = ResLoader.Load("Prefab/Player") as GameObject;
-//         GameObject player = NGUITools.AddChild(go, prefab);
-//         player.transform.localRotation = quaternion;
-//         player.transform.localPosition = centrePos;
-//         playerControl = player.GetComponent<PlayerControl>();
-//         status = STATUS.NONE;
-//     }
-
-//     public PlayerControl PlayerCtr
-//     {
-//         get { return playerControl; }
-//     }
-
     public void AddPoker(poker p)
     {
         pokers.Add(p);
+        pokers.Sort();
     }
     public void RemovePoker()
     {

@@ -37,8 +37,9 @@ public class GameStart : MonoBehaviour {
     }
     
 
-    public void GameBegin()
+    public void GameBegin(GameObject go)
     {
+        go.SetActive(false);
         Game.Instance.DoGameFapai();
     }
 
@@ -47,32 +48,4 @@ public class GameStart : MonoBehaviour {
     {
 	        
 	}
-    //     public Player(DIRECTION di, GameObject go)
-    //     {
-    //         Vector3 centrePos = Vector4.zero;
-    // 
-    //         Quaternion quaternion = new Quaternion();
-    //         if (di == DIRECTION.EAST)
-    //         {
-    //             centrePos = new Vector3(-390, 100, 0);
-    //             quaternion = new Quaternion(0, 0, 90, 0);
-    //         }
-    //         if (di == DIRECTION.WEST)
-    //         {
-    //             centrePos = new Vector3(390,100, 0);
-    //             quaternion = new Quaternion(0, 0, 90, 0);
-    //         }
-    //         if (di == DIRECTION.SOUTH)
-    //         {
-    //             centrePos = new Vector3(0, -330, 0);
-    //             quaternion = new Quaternion(0, 0, 0, 0);
-    //         }
-    //         GameObject prefab = ResLoader.Load("Prefab/Player") as GameObject;
-    //         GameObject player = NGUITools.AddChild(go, prefab);
-    //         player.transform.localRotation = quaternion;
-    //         player.transform.localPosition = centrePos;
-    //         playerControl = player.GetComponent<PlayerControl>();
-    //         status = STATUS.NONE;
-    //     }
-  
 }

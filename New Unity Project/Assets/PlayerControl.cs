@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class PlayerControl : MonoBehaviour 
 {
     List<PuKe> list = new List<PuKe>();
+    List<poker> clickPoker = new List<poker>();
     private Player player;
     public UILabel buttonLabel;
     public UILabel messageLabel;
@@ -26,7 +27,9 @@ public class PlayerControl : MonoBehaviour
         UISprite sprite = puke.GetComponent<UISprite>();
         sprite.spriteName = name;
         sprite.MarkAsChanged();
-        list.Add(puke.GetComponent<PuKe>());
+        PuKe p = puke.GetComponent<PuKe>();
+        p.SetBoxClider(0-list.Count);
+        list.Add(p);
         AdjusetPosition();
         puke.SetActive(true);
        
@@ -70,7 +73,6 @@ public class PlayerControl : MonoBehaviour
 
     void FaPai()
     {
-        Debug.Log("afsafdasfas");
         StartCoroutine(IEnumeratorFaPai());
     }
 
@@ -78,4 +80,27 @@ public class PlayerControl : MonoBehaviour
     {
         Game.Instance.GameFapai -= new Game.OnGameFaPai(FaPai);
     }
+
+   public void ClickPoker(PuKe p)
+   {
+       if(p.IsClick)
+       {
+          if(! clickPoker.Contains(p.Poker))
+          {
+              clickPoker.Add(p.Poker);
+          }
+       }
+       else
+       {
+           if (clickPoker.Contains(p.Poker))
+           {
+               clickPoker.Remove(p.Poker);
+           }
+       }
+   }
+
+   public void ChuPai()
+   {
+       if (clickPoker.Count == 0) return;
+   }
 }
