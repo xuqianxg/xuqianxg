@@ -5,9 +5,19 @@ using System.Collections.Generic;
 public class PlayerControl : MonoBehaviour 
 {
     List<PuKe> list = new List<PuKe>();
+    private Player player;
+    public UILabel buttonLabel;
+    public UILabel messageLabel;
+    bool isReady = false;
+
+    void Awake()
+    {
+        Game.Instance.GameFapai += new Game.OnGameFaPai(FaPai);
+    }
+
     public void Remove(string name)
     {
-
+         
     }
     void Add(string name)
     {
@@ -22,11 +32,11 @@ public class PlayerControl : MonoBehaviour
        
     }
 
-    public IEnumerator FaPai()
+    IEnumerator IEnumeratorFaPai()
     {
         for (int i = 0; i < 17; i++)
         {
-            Add("heitao1");
+            Add(player.GetPokerSpriteName(i));
             yield return new WaitForSeconds(0.25f);
         }
     }
@@ -41,6 +51,31 @@ public class PlayerControl : MonoBehaviour
             list[i].transform.localPosition = new Vector3(leftPosition.x + 105 / 2 + Game.PuKeSpacing * i, leftPosition.y, leftPosition.z);
         }
     }
+    public void ReadClick()
+    {
+        buttonLabel.text = isReady ? "取消准备" : "准备";
+        isReady = !isReady;
+    }
 
+    
 
+    public void SetPlayer (Player p)
+    {
+        player = p;
+    }
+    public bool IsRead
+    {
+        get { return isReady; }
+    }
+
+    void FaPai()
+    {
+        Debug.Log("afsafdasfas");
+        StartCoroutine(IEnumeratorFaPai());
+    }
+
+    void Destroy()
+    {
+        Game.Instance.GameFapai -= new Game.OnGameFaPai(FaPai);
+    }
 }

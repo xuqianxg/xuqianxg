@@ -3,25 +3,76 @@ using System.Collections;
 
 public class GameStart : MonoBehaviour {
 
-    public UILabel buttonLabel;
-    public UILabel messageLabel;
-    bool isReady = false;
-	void Start () 
+
+
+    void Awake()
     {
-        Player player1 = new Player(DIRECTION.SOUTH, gameObject);
-        StartCoroutine(player1.PlayerCtr.FaPai());
-	}
-	
+        Game.Instance.Init();
+        Debug.Log(transform.localEulerAngles);
+    }
+
+    void Start()
+    {
+
+        GameObject prefab = ResLoader.Load("Prefab/Player") as GameObject;
+        GameObject player = NGUITools.AddChild(gameObject, prefab);
+        player.transform.localPosition = new Vector3(-390, 100, 0);
+        player.transform.localEulerAngles = new Vector3(0, 0,-90);
+        player.GetComponent<PlayerControl>().SetPlayer(Game.Instance.Player1);
+        player = NGUITools.AddChild(gameObject, prefab);
+        player.transform.localPosition = new Vector3(390, 100, 0);
+        player.transform.localEulerAngles = new Vector3(0, 0, 90);
+        player.GetComponent<PlayerControl>().SetPlayer(Game.Instance.Player2);
+        player = NGUITools.AddChild(gameObject, prefab);
+        player.transform.localPosition = new Vector3(0, -330, 0);
+        player.GetComponent<PlayerControl>().SetPlayer(Game.Instance.Player3);
+        Game.Instance.XiPai();
+        for (int i = 0; i < 17; i++)
+        {
+            Debug.Log("player1 "+ Game.Instance.Player1.GetPokerSpriteName(i));
+            Debug.Log("player2 " + Game.Instance.Player2.GetPokerSpriteName(i));
+            Debug.Log("player3 " + Game.Instance.Player3.GetPokerSpriteName(i));
+        }
+
+    }
+    
+
+    public void GameBegin()
+    {
+        Game.Instance.DoGameFapai();
+    }
+
 
 	void Update () 
     {
-	
+	        
 	}
-
-    void ReadClick()
-    {
-        //isReady == true ? buttonLabel.text = "取消准备" : buttonLabel.text = "准备";
-        buttonLabel.text = isReady ? "取消准备" : "准备";
-        isReady = !isReady;
-    }
+    //     public Player(DIRECTION di, GameObject go)
+    //     {
+    //         Vector3 centrePos = Vector4.zero;
+    // 
+    //         Quaternion quaternion = new Quaternion();
+    //         if (di == DIRECTION.EAST)
+    //         {
+    //             centrePos = new Vector3(-390, 100, 0);
+    //             quaternion = new Quaternion(0, 0, 90, 0);
+    //         }
+    //         if (di == DIRECTION.WEST)
+    //         {
+    //             centrePos = new Vector3(390,100, 0);
+    //             quaternion = new Quaternion(0, 0, 90, 0);
+    //         }
+    //         if (di == DIRECTION.SOUTH)
+    //         {
+    //             centrePos = new Vector3(0, -330, 0);
+    //             quaternion = new Quaternion(0, 0, 0, 0);
+    //         }
+    //         GameObject prefab = ResLoader.Load("Prefab/Player") as GameObject;
+    //         GameObject player = NGUITools.AddChild(go, prefab);
+    //         player.transform.localRotation = quaternion;
+    //         player.transform.localPosition = centrePos;
+    //         playerControl = player.GetComponent<PlayerControl>();
+    //         status = STATUS.NONE;
+    //     }
+  
 }
