@@ -27,13 +27,6 @@ public class GameStart : MonoBehaviour {
         player.transform.localPosition = new Vector3(0, -330, 0);
         player.GetComponent<PlayerControl>().SetPlayer(Game.Instance.Player3);
         Game.Instance.XiPai();
-        for (int i = 0; i < 17; i++)
-        {
-            Debug.Log("player1 "+ Game.Instance.Player1.GetPokerSpriteName(i));
-            Debug.Log("player2 " + Game.Instance.Player2.GetPokerSpriteName(i));
-            Debug.Log("player3 " + Game.Instance.Player3.GetPokerSpriteName(i));
-        }
-
     }
     
 

@@ -43,6 +43,6 @@ public class PuKe : MonoBehaviour {
             transform.localPosition = new Vector3(curPos.x, curPos.y - 40, curPos.z);
         }
         isClick = !isClick;
-        gameObject.SendMessage("ClickPoker", this,SendMessageOptions.DontRequireReceiver);
+        transform.parent.SendMessage("ClickPoker", this, SendMessageOptions.DontRequireReceiver);
     }
 }

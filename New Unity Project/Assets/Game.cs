@@ -2,6 +2,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+
+
+public enum DIRECTION
+{
+    EAST,
+    WEST,
+    SOUTH,
+}
+
+public enum STATUS
+{
+    PERSANT1,
+    PERSANT2,
+    LANDLORD,
+    NONE,
+}
+
+public enum POKERCOMBINATION
+{
+    SHUNZI,
+    SANDAIYI,
+    SANDAIER,
+    SAN,
+    DUIZI,
+    SINGLE,
+    FEIJI,
+    ZHADAN,
+    ERROR,
+
+}
+
+public class PokerData
+{
+    public POKERCOMBINATION PokerCombination;
+    public List<int> list = new List<int>();
+}
 public class Game
 {
     private static Game instance;
@@ -73,6 +109,158 @@ public class Game
     {
         GameFapai();
     }
+
+    public delegate void OnGameChuPai(List<poker> list);
+    public event OnGameChuPai GameChuPai;
+
+    public void DoGameChuPai(List<poker> list)
+    {
+        GameChuPai(list);
+    }
+
+
+    public void Chupai(List<poker> list)
+    {
+        PokerData pokerData = GetPokers(list);
+        Debug.Log(pokerData.PokerCombination.ToString() + "   " + pokerData.list[0]);
+    }
+
+
+    public PokerData GetPokers(List<poker> list)
+    {
+        PokerData pokerData = new PokerData();
+        list.Sort();
+        if (list.Count == 1) pokerData.PokerCombination = POKERCOMBINATION.SINGLE;
+        if(list.Count == 2)
+        {
+            if (list[0].Value == 0 && list[0].Value == list[1].Value)
+            {
+                pokerData.list.Add(0);
+                pokerData.PokerCombination = POKERCOMBINATION.ZHADAN;
+            }
+            else
+            {
+                pokerData.list.Add(list[0].Value);
+                pokerData.PokerCombination = list[0].Value == list[1].Value ? POKERCOMBINATION.DUIZI : POKERCOMBINATION.ERROR;
+            }
+            //return list[0].Value == list[1].Value ?  POKERCOMBINATION.DUIZI : POKERCOMBINATION.ERROR;
+           
+        }
+        if(list.Count==3)
+        {
+            pokerData.list.Add(list[0].Value);
+            pokerData.PokerCombination = (list[0].Value == list[1].Value && list[2].Value == list[0].Value) ? POKERCOMBINATION.SAN : POKERCOMBINATION.ERROR;
+        }
+        if(list.Count==4)
+        {
+            if(list[0].Value == list[1].Value && list[1].Value == list[2].Value && list[2].Value == list[3].Value)
+            {
+                pokerData.list.Add(list[0].Value);
+                pokerData.PokerCombination = POKERCOMBINATION.ZHADAN;
+            }
+            else
+            {
+                int flag = list[0].Value;
+                if(flag==list[1].Value)
+                {
+                    if(flag == list[2].Value || flag == list[3].Value)
+                    {
+                        pokerData.PokerCombination = POKERCOMBINATION.SANDAIYI;
+                    }
+                    else pokerData.PokerCombination = POKERCOMBINATION.ERROR;
+                }
+                else
+                {
+                    if(flag==list[2].Value && flag==list[3].Value)
+                    {
+                        pokerData.PokerCombination = POKERCOMBINATION.SANDAIYI;
+                    }
+                    else
+                    {
+                        flag = list[1].Value;
+                        if(flag==list[2].Value && flag== list[3].Value)
+                            pokerData.PokerCombination = POKERCOMBINATION.SANDAIYI;
+                        else pokerData.PokerCombination = POKERCOMBINATION.ERROR;
+                    }
+                }
+                pokerData.list.Add(flag);
+            }
+        }
+        if(list.Count==5)
+        {
+            List<int> l = GetPokersEqual(list, 3);
+            if(l.Count>0)
+            {
+                pokerData.list.Add(l[0]);
+                l = GetPokersEqual(list, 2);
+                if(l.Count>0)
+                {
+                    pokerData.list.Add(l[0]);
+                    pokerData.PokerCombination = POKERCOMBINATION.SANDAIER;
+                }
+                else
+                {
+                    pokerData.PokerCombination = POKERCOMBINATION.ERROR;
+                }
+            }
+            else if (IsDanShunzi(list))
+            {
+                pokerData.PokerCombination = POKERCOMBINATION.SHUNZI;
+            }
+            else
+            {
+                pokerData.PokerCombination = POKERCOMBINATION.ERROR;
+            }
+        }
+
+        return pokerData;
+    }
+
+
+    bool IsDanShunzi(List<poker> pokers) //单顺子
+    {
+        return true;
+    }
+
+    bool IsShuangShunzi(List<poker> pokers)//双顺子  445566
+    {
+        return true;
+    }
+
+    bool IsFeiji(List<poker> pokers)
+    {
+        return true;
+    }
+
+    private List<int> GetPokersEqual(List<poker> pokers,int count)
+    {
+        List<int> list = new List<int>();
+        Dictionary<int, int> dict = new Dictionary<int, int>();
+        foreach(poker p  in pokers)
+        {
+            if(dict.ContainsKey(p.Value))
+            {
+                dict[p.Value] += 1;
+            }
+            else
+            {
+                dict.Add(p.Value, 1);
+            }
+        }
+        foreach(KeyValuePair<int,int> key in dict)
+        {
+            if(key.Value==count)
+            {
+                list.Add(key.Key);
+            }
+        }
+        return list;
+    }
+
+    public List<poker> GetShangjiaPokers()
+    {
+        return null;
+    }
 }
 public enum STYLE
 {
@@ -142,33 +330,7 @@ public class poker :IComparable
     }
 }
 
-public enum DIRECTION
-{
-    EAST,
-    WEST,
-    SOUTH,
-}
 
-public enum STATUS
-{
-    PERSANT1,
-    PERSANT2,
-    LANDLORD,
-    NONE,
-}
-
-public enum POKERCOMBINATION
-{
-    SHUNZI,
-    SANDAIYI,
-    SANDAIER,
-    SAN,
-    DUIZI,
-    SINGLE,
-    FEIJI,
-    ZHADAN,
-
-}
 public class Player
 {
     List<poker> pokers = new List<poker>();
@@ -198,11 +360,7 @@ public class Player
     {
 
     }
-    public string GetPokerSpriteName(int index)
-    {
-        poker p = pokers[index];
-        return (p.Style.ToString() + p.Value.ToString()).ToLower();
-    }
+
 }
 
 public class PukeSingle

@@ -20,26 +20,27 @@ public class PlayerControl : MonoBehaviour
     {
          
     }
-    void Add(string name)
+    void Add(poker p)
     {
         GameObject prefab = ResLoader.Load("Prefab/Puke") as GameObject;
         GameObject puke = NGUITools.AddChild(gameObject, prefab);
         UISprite sprite = puke.GetComponent<UISprite>();
+        string name = GetPokerSpriteName(p);
         sprite.spriteName = name;
         sprite.MarkAsChanged();
-        PuKe p = puke.GetComponent<PuKe>();
-        p.SetBoxClider(0-list.Count);
-        list.Add(p);
+        PuKe pk = puke.GetComponent<PuKe>();
+        pk.Poker = p;
+        pk.SetBoxClider(0-list.Count);
+        list.Add(pk);
         AdjusetPosition();
         puke.SetActive(true);
-       
     }
 
     IEnumerator IEnumeratorFaPai()
     {
         for (int i = 0; i < 17; i++)
         {
-            Add(player.GetPokerSpriteName(i));
+            Add(player.Pokers[i]);
             yield return new WaitForSeconds(0.25f);
         }
     }
@@ -82,25 +83,31 @@ public class PlayerControl : MonoBehaviour
     }
 
    public void ClickPoker(PuKe p)
-   {
-       if(p.IsClick)
-       {
-          if(! clickPoker.Contains(p.Poker))
-          {
-              clickPoker.Add(p.Poker);
-          }
-       }
-       else
-       {
-           if (clickPoker.Contains(p.Poker))
-           {
-               clickPoker.Remove(p.Poker);
-           }
-       }
+    {
+        Debug.Log(p.ToString());
+        if (p.IsClick)
+        {
+            if (!clickPoker.Contains(p.Poker))
+            {
+                clickPoker.Add(p.Poker);
+            }
+        }
+        else
+        {
+            if (clickPoker.Contains(p.Poker))
+            {
+                clickPoker.Remove(p.Poker);
+            }
+        }
    }
 
    public void ChuPai()
    {
        if (clickPoker.Count == 0) return;
+       Game.Instance.Chupai(clickPoker);
+   }
+   private string GetPokerSpriteName(poker p)
+   {
+       return (p.Style.ToString() + p.Value.ToString()).ToLower();
    }
 }
