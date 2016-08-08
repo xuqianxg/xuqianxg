@@ -517,6 +517,30 @@ static public class NGUITools
 		return go;
 	}
 
+
+    static public GameObject AddChildNotLoseAnyThing(this GameObject parent, GameObject prefab)
+    {
+        Transform initTrans = prefab.transform;
+        Vector3 finalWorldPos = Vector3.zero;
+        if(parent!=null)
+        {
+            finalWorldPos = parent.transform.localToWorldMatrix.MultiplyPoint(initTrans.position);
+        }
+        GameObject go = GameObject.Instantiate(prefab,finalWorldPos,initTrans.rotation) as GameObject;
+#if UNITY_EDITOR
+        UnityEditor.Undo.RegisterCreatedObjectUndo(go, "Create Object");
+#endif
+        if (go != null && parent != null)
+        {
+            Transform t = go.transform;
+            Vector3 myLocalScale = t.localScale;
+            t.parent = parent.transform;
+            t.localScale = myLocalScale;
+            go.layer = parent.layer;
+        }
+        return go;
+    }
+
 	/// <summary>
 	/// Calculate the game object's depth based on the widgets within, and also taking panel depth into consideration.
 	/// </summary>

@@ -43,6 +43,7 @@ public class PlayerControl : MonoBehaviour
             Add(player.Pokers[i]);
             yield return new WaitForSeconds(0.25f);
         }
+        Game.Instance.DoGameSetDizhuPoker();
     }
     void AdjusetPosition()
     {
@@ -109,5 +110,10 @@ public class PlayerControl : MonoBehaviour
    private string GetPokerSpriteName(poker p)
    {
        return (p.Style.ToString() + p.Value.ToString()).ToLower();
+   }
+
+   public void QiangDiZhu()
+   {
+
    }
 }

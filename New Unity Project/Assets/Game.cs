@@ -57,7 +57,8 @@ public class Game
     public  Player Player1;
     public  Player Player2;
     public  Player Player3;
-    public  List<poker> pokers = new List<poker>();
+    private  List<poker> pokers = new List<poker>();
+    private int BeiShu = 0;
     public  bool AllReady()
     {
         if( true)
@@ -107,7 +108,10 @@ public class Game
 
     public void DoGameFapai()
     {
-        GameFapai();
+        if (GameFapai != null)
+        {
+            GameFapai();
+        }
     }
 
     public delegate void OnGameChuPai(List<poker> list);
@@ -115,9 +119,29 @@ public class Game
 
     public void DoGameChuPai(List<poker> list)
     {
-        GameChuPai(list);
+        if (GameChuPai != null)
+        {
+            GameChuPai(list);
+        }
     }
 
+    public delegate void OnGameSetDizhuPoker();
+    public event OnGameSetDizhuPoker GameSetDizhuiPoker;
+    private bool isFirst = true;
+    public void DoGameSetDizhuPoker()
+    {
+        if (isFirst && GameSetDizhuiPoker!=null)
+        {
+            GameSetDizhuiPoker();
+            isFirst = false;
+        }
+        
+    }
+
+    public List<poker> GetDizhuPoker()
+    {
+        return pokers;
+    }
 
     public void Chupai(List<poker> list)
     {
@@ -219,7 +243,17 @@ public class Game
 
     bool IsDanShunzi(List<poker> pokers) //单顺子
     {
-        return true;
+        pokers.Sort();
+        int count = pokers.Count;
+        if(pokers[count-1].Value==0 || pokers[count-1].Value==2) return false;
+        for(int i = 1;i<count-1;i++)
+        {
+            if (pokers[i].Value - pokers[i - 1].Value == 1) continue;
+            else return false;
+        }
+        if (pokers[count - 1].Value - pokers[count - 2].Value == 1) return true;
+        else if (pokers[count - 1].Value == 1 && pokers[count - 2].Value == 13) return true;
+        return false;
     }
 
     bool IsShuangShunzi(List<poker> pokers)//双顺子  445566
@@ -260,6 +294,14 @@ public class Game
     public List<poker> GetShangjiaPokers()
     {
         return null;
+    }
+
+    public void ComparePlayerBeishu(Player player)
+    {
+        if (player.BeiShu == 3)
+        {
+            
+        }
     }
 }
 public enum STYLE
@@ -334,9 +376,8 @@ public class poker :IComparable
 public class Player
 {
     List<poker> pokers = new List<poker>();
-    
-    STATUS status;
-
+    int beishu = 0;
+     STATUS status;
     DIRECTION direction;
     public DIRECTION Direction
     {
@@ -350,6 +391,16 @@ public class Player
     public Player(DIRECTION di)
     {
         direction = di;
+    }
+    public int BeiShu
+    {
+        get { return beishu; }
+        set { BeiShu = value; }
+    }
+    public STATUS Status
+    {
+        get { return status; }
+        set { status = value; }
     }
     public void AddPoker(poker p)
     {

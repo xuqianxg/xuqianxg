@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using System.Collections.Generic;
 public class GameStart : MonoBehaviour {
 
 
-
+    private DizhuPai dizhuPai;
     void Awake()
     {
         Game.Instance.Init();
@@ -13,7 +13,7 @@ public class GameStart : MonoBehaviour {
 
     void Start()
     {
-
+        Game.Instance.GameSetDizhuiPoker +=  this.DizhuPoker;
         GameObject prefab = ResLoader.Load("Prefab/Player") as GameObject;
         GameObject player = NGUITools.AddChild(gameObject, prefab);
         player.transform.localPosition = new Vector3(-390, 100, 0);
@@ -34,11 +34,23 @@ public class GameStart : MonoBehaviour {
     {
         go.SetActive(false);
         Game.Instance.DoGameFapai();
+        //WaitUntil()
+
     }
 
-
-	void Update () 
+    void DizhuPoker()
     {
-	        
-	}
+        GameObject prefab = ResLoader.Load("Prefab/DiZhuPai") as GameObject;
+        GameObject dizhuPaiGo = NGUITools.AddChildNotLoseAnyThing(gameObject, prefab);
+        dizhuPai = dizhuPaiGo.GetComponent<DizhuPai>();
+    }
+
+    void SetDizhuPoker(List<poker> list)
+    {
+      
+    }
+    void OnDestroy()
+    {
+        Game.Instance.GameSetDizhuiPoker -= this.DizhuPoker;
+    }
 }
