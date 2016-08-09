@@ -10,6 +10,13 @@ public class PlayerControl : MonoBehaviour
     public UILabel buttonLabel;
     public UILabel messageLabel;
     bool isReady = false;
+    int time = 30;
+    bool beginTime = false;
+    float timeStep = 0;
+    public int Beishu = 0;
+
+    public UIButton Qiang;
+    public UIButton BuQiang;
 
     void Awake()
     {
@@ -36,11 +43,11 @@ public class PlayerControl : MonoBehaviour
         puke.SetActive(true);
     }
 
-    IEnumerator IEnumeratorFaPai()
+    IEnumerator IEnumeratorFaPai(List<poker> pokers)
     {
-        for (int i = 0; i < 17; i++)
+        for (int i = 0; i < pokers.Count; i++)
         {
-            Add(player.Pokers[i]);
+            Add(pokers[i]);
             yield return new WaitForSeconds(0.25f);
         }
         Game.Instance.DoGameSetDizhuPoker();
@@ -64,9 +71,10 @@ public class PlayerControl : MonoBehaviour
 
     
 
-    public void SetPlayer (Player p)
+    public Player Player
     {
-        player = p;
+        get { return player; }
+        set { player = value; }
     }
     public bool IsRead
     {
@@ -75,7 +83,8 @@ public class PlayerControl : MonoBehaviour
 
     void FaPai()
     {
-        StartCoroutine(IEnumeratorFaPai());
+        StartCoroutine(IEnumeratorFaPai(player.Pokers));
+       //IEnumeratorFaPai();
     }
 
     void Destroy()
@@ -112,8 +121,67 @@ public class PlayerControl : MonoBehaviour
        return (p.Style.ToString() + p.Value.ToString()).ToLower();
    }
 
-   public void QiangDiZhu()
-   {
+   public void GiveUpDiZhu()
+    {
 
-   }
+    }
+
+    public  void QiangDiZhu()
+    {
+        Beishu = Game.Instance.CurBeishu+1;
+        Game.Instance.CurBeishu = Beishu;
+        transform.parent.SendMessage("QiangDizhu", this, SendMessageOptions.DontRequireReceiver);
+        Qiang.gameObject.SetActive(false);
+        BuQiang.gameObject.SetActive(false);
+        beginTime = false;
+        messageLabel.gameObject.SetActive(false);
+    }
+
+    public void AddDizhuPoker()
+    {
+        List<poker> pokers = Game.Instance.GetDizhuPoker();
+        Game.Instance.DoGameDiZhuOver();
+        StartCoroutine(IEnumeratorFaPai(pokers));
+        player.Status = STATUS.LANDLORD;
+        ReadyChuPoker();
+    }
+
+    public void ReadyChuPoker()
+    {
+
+    }
+
+    public void BegianQiangDiZhu()
+    {
+        Qiang.gameObject.SetActive(true);
+        BuQiang.gameObject.SetActive(true);
+        beginTime = true;
+    }
+
+
+    void Update()
+    {
+        if(beginTime)
+        {
+            timeStep += Time.deltaTime;
+            Debug.Log(timeStep);
+            if(timeStep>1)
+            {
+                time -=1;
+                messageLabel.text = time.ToString();
+                timeStep = 0;
+                if(time == 0)
+                {
+                    GiveUpDiZhu();
+                    beginTime = false;
+                }
+                
+            }
+        }
+    }
+
+//    public void QiangDiZhu(bool )
+//    {
+//        Game.Instance.ComparePlayerBeishu()
+//    }
 }

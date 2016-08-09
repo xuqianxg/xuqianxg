@@ -59,6 +59,9 @@ public class Game
     public  Player Player3;
     private  List<poker> pokers = new List<poker>();
     private int BeiShu = 0;
+    private PokerData beforPoker;
+    public int CurBeishu = 0;
+
     public  bool AllReady()
     {
         if( true)
@@ -84,6 +87,9 @@ public class Game
         Player1 = new Player(DIRECTION.SOUTH);
         Player2 = new Player(DIRECTION.WEST);
         Player3 = new Player(DIRECTION.EAST);
+        Player1.Next = Player3;
+        Player2.Next = Player1;
+        Player3.Next = Player2;
        
     }
     public void XiPai()
@@ -138,15 +144,32 @@ public class Game
         
     }
 
+    public delegate void OnGameDiZhuOver();
+    public event OnGameDiZhuOver GameDiZhuOver;
+    public void DoGameDiZhuOver()
+    {
+        if (GameDiZhuOver != null)
+        {
+            GameDiZhuOver();
+            isFirst = false;
+        }
+    }
+
     public List<poker> GetDizhuPoker()
     {
         return pokers;
     }
 
-    public void Chupai(List<poker> list)
+    public bool Chupai(List<poker> list)
     {
         PokerData pokerData = GetPokers(list);
-        Debug.Log(pokerData.PokerCombination.ToString() + "   " + pokerData.list[0]);
+        if(beforPoker == null)
+        {
+            beforPoker = pokerData;
+            
+        }
+
+        //Debug.Log(pokerData.PokerCombination.ToString() + "   " + pokerData.list[0]);
     }
 
 
@@ -296,13 +319,50 @@ public class Game
         return null;
     }
 
-    public void ComparePlayerBeishu(Player player)
+    public void  QiangDizhu(Player player)
     {
-        if (player.BeiShu == 3)
+//         Player dizhu = null;
+//         if(IsDiZhu(Player1,Player2,Player3))
+//         {
+//             dizhu = Player1;
+//         }
+//         else if (IsDiZhu(Player2, Player1, Player3))
+//         {
+//             dizhu = Player2;
+//         }
+//         else if (IsDiZhu(Player3, Player2, Player1))
+//         {
+//             dizhu = Player3;
+//         }
+//         if(dizhu==null)
+//         {
+//             return false;
+//         }
+//         else
+//         {
+//             return true;
+//         }
+
+        if(player.BeiShu == 3 || player.Next.GiveUpDiZhu)
         {
-            
+            foreach(poker p in pokers)
+            {
+                player.AddPoker(p);
+            }
+        }
+        else
+        {
+
         }
     }
+
+    bool IsDiZhu(Player p1 ,Player p2 ,Player p3)
+    {
+        if (p1.BeiShu == 3) return true;
+        if (p1.BeiShu > p2.BeiShu && p1.BeiShu > p3.BeiShu && p2.GiveUpDiZhu && p3.GiveUpDiZhu) return true;
+        return false;
+    }
+
 }
 public enum STYLE
 {
@@ -377,8 +437,21 @@ public class Player
 {
     List<poker> pokers = new List<poker>();
     int beishu = 0;
-     STATUS status;
+    STATUS status;
     DIRECTION direction;
+    bool giveUpDizhu = false;
+    Player next;
+
+    public Player Next
+    {
+        get { return next; }
+        set { next = value; }
+    }
+
+    public bool GiveUpDiZhu
+    {
+        get { return giveUpDizhu;}
+    }
     public DIRECTION Direction
     {
         get { return direction; }
@@ -410,6 +483,11 @@ public class Player
     public void RemovePoker()
     {
 
+    }
+
+    public void  GiveUpDizhu()
+    {
+        giveUpDizhu = true;
     }
 
 }
