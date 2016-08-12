@@ -256,28 +256,28 @@ public class UIButton : UIButtonColor
 
 	public override void SetState (State state, bool immediate)
 	{
-		base.SetState(state, immediate);
-
-		if (mSprite != null)
-		{
-			switch (state)
-			{
-				case State.Normal: SetSprite(mNormalSprite); break;
-				case State.Hover: SetSprite(string.IsNullOrEmpty(hoverSprite) ? mNormalSprite : hoverSprite); break;
-				case State.Pressed: SetSprite(pressedSprite); break;
-				case State.Disabled: SetSprite(disabledSprite); break;
-			}
-		}
-		else if (mSprite2D != null)
-		{
-			switch (state)
-			{
-				case State.Normal: SetSprite(mNormalSprite2D); break;
-				case State.Hover: SetSprite(hoverSprite2D == null ? mNormalSprite2D : hoverSprite2D); break;
-				case State.Pressed: SetSprite(pressedSprite2D); break;
-				case State.Disabled: SetSprite(disabledSprite2D); break;
-			}
-		}
+// 		base.SetState(state, immediate);
+// 
+// 		if (mSprite != null)
+// 		{
+// 			switch (state)
+// 			{
+// 				case State.Normal: SetSprite(normalSprite); break;
+// 				//case State.Hover: SetSprite(string.IsNullOrEmpty(hoverSprite) ? mNormalSprite : hoverSprite); break;
+// 				case State.Pressed: SetSprite(pressedSprite); break;
+// 				case State.Disabled: SetSprite(disabledSprite); break;
+// 			}
+// 		}
+// 		else if (mSprite2D != null)
+// 		{
+// 			switch (state)
+// 			{
+// 				case State.Normal: SetSprite(mNormalSprite2D); break;
+// 				//case State.Hover: SetSprite(hoverSprite2D == null ? mNormalSprite2D : hoverSprite2D); break;
+// 				case State.Pressed: SetSprite(pressedSprite2D); break;
+// 				case State.Disabled: SetSprite(disabledSprite2D); break;
+// 			}
+// 		}
 	}
 
 	/// <summary>

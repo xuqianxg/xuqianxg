@@ -82,8 +82,8 @@ public class Game
                 pokers.Add(p);
             }
         }
-        pokers.Add(new poker(STYLE.DAWANG, 0));
-        pokers.Add(new poker(STYLE.XIAOWANG, 0));
+        pokers.Add(new poker(STYLE.DAWANG, 101));
+        pokers.Add(new poker(STYLE.XIAOWANG, 100));
         Player1 = new Player(DIRECTION.SOUTH);
         Player2 = new Player(DIRECTION.WEST);
         Player3 = new Player(DIRECTION.EAST);
@@ -131,29 +131,60 @@ public class Game
         }
     }
 
-    public delegate void OnGameSetDizhuPoker();
-    public event OnGameSetDizhuPoker GameSetDizhuiPoker;
+    public delegate void OnGameBeginDizhuPoker();///实例化地主prefab
+    public event OnGameBeginDizhuPoker GameBeginDizhuPoker;
     private bool isFirst = true;
-    public void DoGameSetDizhuPoker()
+    public void BeginDizhuPoker()
     {
-        if (isFirst && GameSetDizhuiPoker!=null)
+        if (isFirst && GameBeginDizhuPoker != null)
         {
-            GameSetDizhuiPoker();
+            GameBeginDizhuPoker();
             isFirst = false;
         }
         
     }
 
-    public delegate void OnGameDiZhuOver();
+    public delegate void OnGameDiZhuOver(); ///抢地主结束
     public event OnGameDiZhuOver GameDiZhuOver;
     public void DoGameDiZhuOver()
     {
         if (GameDiZhuOver != null)
         {
             GameDiZhuOver();
-            isFirst = false;
         }
     }
+
+    public delegate void OnGameGetDiZhu(Player player,bool isGet);
+    public event OnGameGetDiZhu GameGetDiZhu;
+    public void DoGameGetDiZhu(Player player, bool isGet)
+    {
+        if (GameGetDiZhu != null)
+        {
+            GameGetDiZhu(player, isGet);
+        }
+    }
+
+    public delegate void OnGameBeginPlayerQiangDiZhu(Player player);
+    public event OnGameBeginPlayerQiangDiZhu GameBeginPlayerQiangDiZhu;
+    public void DoGameBeginPlayerQiangDiZhu(Player player)
+    {
+        if (GameBeginPlayerQiangDiZhu != null)
+        {
+            GameBeginPlayerQiangDiZhu(player);
+        }
+    }
+
+
+    public delegate void OnGameBeginPlayerChuPai(Player player);
+    public event OnGameBeginPlayerChuPai GameBeginPlayerChuPai;
+    public void DoGameBeginPlayerChuPai(Player player)
+    {
+        if (GameBeginPlayerChuPai != null)
+        {
+            GameBeginPlayerChuPai(player);
+        }
+    }
+
 
     public List<poker> GetDizhuPoker()
     {
@@ -163,12 +194,69 @@ public class Game
     public bool Chupai(List<poker> list)
     {
         PokerData pokerData = GetPokers(list);
-        if(beforPoker == null)
+        bool res = false;
+        if (pokerData.PokerCombination == POKERCOMBINATION.ERROR) res = false;
+        if(beforPoker == null )
         {
             beforPoker = pokerData;
-            
+            res = true;
         }
-
+        else
+        {
+           
+           /* switch (beforPoker.PokerCombination)
+            {
+                case POKERCOMBINATION.DUIZI:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.DUIZI && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                case POKERCOMBINATION.FEIJI:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.SAN && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                case POKERCOMBINATION.SAN:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.SAN && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                case POKERCOMBINATION.SANDAIER:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.SANDAIER && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                case POKERCOMBINATION.SANDAIYI:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.SANDAIYI && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                case POKERCOMBINATION.SHUNZI:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.SHUNZI && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                    break;
+                case POKERCOMBINATION.SINGLE:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
+                    if (pokerData.PokerCombination == POKERCOMBINATION.SINGLE && pokerData.list[0] > beforPoker.list[0]) return true;
+                    return false;
+                case POKERCOMBINATION.ZHADAN:
+                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN && (pokerData.list[0] > beforPoker.list[0] || pokerData.list[0]==0)) return true;
+                    return false;
+            }*/
+             if (pokerData.PokerCombination == beforPoker.PokerCombination)
+            {
+                if (beforPoker.PokerCombination != POKERCOMBINATION.ZHADAN)
+                {
+                    res = (pokerData.list[0] > beforPoker.list[0]) || (beforPoker.list[0] > 2 && beforPoker.list[0] < 14 && pokerData.list[0] < 3);
+                }
+                else
+                {
+                    res = (pokerData.list[0] > beforPoker.list[0] || pokerData.list[0] == 0);
+                }
+            }
+            else
+            {
+                res = (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN);
+            }
+        }
+        if (res) beforPoker = pokerData;
+        return res;
         //Debug.Log(pokerData.PokerCombination.ToString() + "   " + pokerData.list[0]);
     }
 
@@ -177,10 +265,14 @@ public class Game
     {
         PokerData pokerData = new PokerData();
         list.Sort();
-        if (list.Count == 1) pokerData.PokerCombination = POKERCOMBINATION.SINGLE;
+        if (list.Count == 1)
+        {
+            pokerData.PokerCombination = POKERCOMBINATION.SINGLE;
+            pokerData.list.Add(list[0].Value);
+        }
         if(list.Count == 2)
         {
-            if (list[0].Value == 0 && list[0].Value == list[1].Value)
+            if (list[0].Value == 100 && list[1].Value==101)
             {
                 pokerData.list.Add(0);
                 pokerData.PokerCombination = POKERCOMBINATION.ZHADAN;
@@ -259,7 +351,13 @@ public class Game
                 pokerData.PokerCombination = POKERCOMBINATION.ERROR;
             }
         }
-
+        if(list.Count>=6)
+        {
+            if(IsDanShunzi(list))
+            {
+                pokerData.PokerCombination = POKERCOMBINATION.SHUNZI;
+            }
+        }
         return pokerData;
     }
 
@@ -319,40 +417,16 @@ public class Game
         return null;
     }
 
-    public void  QiangDizhu(Player player)
+    public void QiangDiZhu(Player p)
     {
-//         Player dizhu = null;
-//         if(IsDiZhu(Player1,Player2,Player3))
-//         {
-//             dizhu = Player1;
-//         }
-//         else if (IsDiZhu(Player2, Player1, Player3))
-//         {
-//             dizhu = Player2;
-//         }
-//         else if (IsDiZhu(Player3, Player2, Player1))
-//         {
-//             dizhu = Player3;
-//         }
-//         if(dizhu==null)
-//         {
-//             return false;
-//         }
-//         else
-//         {
-//             return true;
-//         }
 
-        if(player.BeiShu == 3 || player.Next.GiveUpDiZhu)
+        if (p.BeiShu == 3 || p.Next.BeiShu == -1)
         {
-            foreach(poker p in pokers)
-            {
-                player.AddPoker(p);
-            }
+            DoGameGetDiZhu(p,true);
         }
         else
         {
-
+            DoGameGetDiZhu(p, false);
         }
     }
 
@@ -363,6 +437,19 @@ public class Game
         return false;
     }
 
+
+    public void WhoQiangDizhu()
+    {
+        if (!Player1.Win && !Player1.Next.Win && !Player1.Next.Next.Win)
+        {
+            DoGameBeginPlayerQiangDiZhu(Player1);
+        }
+    }
+
+    public void SetBeforPokerData(List<poker> p)
+    {
+        beforPoker = GetPokers(p);
+    }
 }
 public enum STYLE
 {
@@ -370,10 +457,10 @@ public enum STYLE
     FANGKUA,
     HONGXIN,
     HEITAO,
-    DAWANG,
     XIAOWANG,
+    DAWANG,
 }
-public class poker :IComparable
+public class poker : IComparable
 {
 
     public int Value;
@@ -383,29 +470,29 @@ public class poker :IComparable
         Style = s;
         Value = v;
     }
-    public static bool operator ==(poker p1,poker p2)
-    {
-        return p1.Value == p2.Value;
-
-    }
-
-    public static bool operator !=(poker p1, poker p2)
-    {
-        return p1.Value != p2.Value;
-    }
+//     public static bool operator ==(poker p1, poker p2)
+//     {
+//         return p1.Value == p2.Value;
+// 
+//     }
+// 
+//     public static bool operator !=(poker p1, poker p2)
+//     {
+//         return p1.Value != p2.Value;
+//     }
     public static bool operator >(poker p1, poker p2)
     {
-        if(p1.Value == p2.Value)
+        if (p1.Value == p2.Value)
         {
             return p1.Style > p2.Style;
         }
         if (p1.Value == 0) return true;
         if (p2.Value == 0) return false;
-        if (p1.Value < 3 && p2.Value > 2)
+        if (p1.Value < 3 && p2.Value > 2 && p2.Value<100)
         {
             return true;
         }
-        if (p1.Value > 2 && p2.Value < 3)
+        if (p1.Value > 2 && p2.Value < 3 && p1.Value < 100)
         {
             return false;
         }
@@ -421,7 +508,7 @@ public class poker :IComparable
         {
             return p1.Style < p2.Style;
         }
-        return p2>p1;
+        return p2 > p1;
     }
     public int CompareTo(object o)
     {
@@ -430,6 +517,10 @@ public class poker :IComparable
         if (this < p) return -1;
         return 0;
     }
+    public override string ToString()
+    {
+        return (this.Style.ToString() + this.Value.ToString()).ToLower();
+    }
 }
 
 
@@ -437,11 +528,17 @@ public class Player
 {
     List<poker> pokers = new List<poker>();
     int beishu = 0;
-    STATUS status;
+    STATUS status = STATUS.NONE;
     DIRECTION direction;
     bool giveUpDizhu = false;
     Player next;
+    bool win = false;
 
+    public bool Win
+    {
+        get { return win; }
+        set { win = value; }
+    }
     public Player Next
     {
         get { return next; }
@@ -468,7 +565,7 @@ public class Player
     public int BeiShu
     {
         get { return beishu; }
-        set { BeiShu = value; }
+        set { beishu = value; }
     }
     public STATUS Status
     {

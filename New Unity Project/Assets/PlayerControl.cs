@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
 
 public class PlayerControl : MonoBehaviour 
 {
     List<PuKe> list = new List<PuKe>();
-    List<poker> clickPoker = new List<poker>();
+    List<PuKe> clickPuke = new List<PuKe>();
     private Player player;
     public UILabel buttonLabel;
     public UILabel messageLabel;
@@ -13,14 +14,19 @@ public class PlayerControl : MonoBehaviour
     int time = 30;
     bool beginTime = false;
     float timeStep = 0;
-    public int Beishu = 0;
-
+    
     public UIButton Qiang;
     public UIButton BuQiang;
 
+    public UIButton Chupai;
+    public UIButton BuChu;
+    
     void Awake()
     {
         Game.Instance.GameFapai += new Game.OnGameFaPai(FaPai);
+        Game.Instance.GameGetDiZhu += this.GetDiZhu;
+        Game.Instance.GameBeginPlayerQiangDiZhu += this.BegianQiangDiZhu;
+        Game.Instance.GameBeginPlayerChuPai += this.BeginPlayerChuPai;
     }
 
     public void Remove(string name)
@@ -43,14 +49,18 @@ public class PlayerControl : MonoBehaviour
         puke.SetActive(true);
     }
 
-    IEnumerator IEnumeratorFaPai(List<poker> pokers)
+    IEnumerator IEnumeratorFaPai(List<poker> pokers,Action callback)
     {
         for (int i = 0; i < pokers.Count; i++)
         {
             Add(pokers[i]);
             yield return new WaitForSeconds(0.25f);
         }
-        Game.Instance.DoGameSetDizhuPoker();
+        /*Game.Instance.BeginDizhuPoker();*/
+        if(callback != null)
+        {
+            callback();
+        }
     }
     void AdjusetPosition()
     {
@@ -83,7 +93,7 @@ public class PlayerControl : MonoBehaviour
 
     void FaPai()
     {
-        StartCoroutine(IEnumeratorFaPai(player.Pokers));
+        StartCoroutine(IEnumeratorFaPai(player.Pokers, Game.Instance.BeginDizhuPoker));
        //IEnumeratorFaPai();
     }
 
@@ -97,65 +107,90 @@ public class PlayerControl : MonoBehaviour
         Debug.Log(p.ToString());
         if (p.IsClick)
         {
-            if (!clickPoker.Contains(p.Poker))
+            if (!clickPuke.Contains(p))
             {
-                clickPoker.Add(p.Poker);
+                clickPuke.Add(p);
             }
         }
         else
         {
-            if (clickPoker.Contains(p.Poker))
+            if (clickPuke.Contains(p))
             {
-                clickPoker.Remove(p.Poker);
+                clickPuke.Remove(p);
             }
         }
    }
 
    public void ChuPai()
    {
-       if (clickPoker.Count == 0) return;
-       Game.Instance.Chupai(clickPoker);
+       if (clickPuke.Count == 0) return;
+       if (Game.Instance.Chupai(GetPukeListPoker()))
+       {
+           RemovePokers(clickPuke);
+           BuChuPai();
+       }
    }
    private string GetPokerSpriteName(poker p)
    {
        return (p.Style.ToString() + p.Value.ToString()).ToLower();
    }
 
-   public void GiveUpDiZhu()
+   public void TimeDone()
     {
-
+        if (player.Status == STATUS.NONE)
+        {
+            player.BeiShu = -1;
+            Game.Instance.DoGameBeginPlayerQiangDiZhu(player.Next);
+            //transform.parent.SendMessage("QiangDizhu", this, SendMessageOptions.DontRequireReceiver);
+        }
+       else
+        {
+            BuChuPai();
+            
+        }
     }
 
     public  void QiangDiZhu()
     {
-        Beishu = Game.Instance.CurBeishu+1;
-        Game.Instance.CurBeishu = Beishu;
-        transform.parent.SendMessage("QiangDizhu", this, SendMessageOptions.DontRequireReceiver);
+        player.BeiShu = Game.Instance.CurBeishu+1;
+        Game.Instance.CurBeishu = player.BeiShu;
+        //transform.parent.SendMessage("QiangDizhu", this, SendMessageOptions.DontRequireReceiver);
         Qiang.gameObject.SetActive(false);
         BuQiang.gameObject.SetActive(false);
         beginTime = false;
         messageLabel.gameObject.SetActive(false);
+        Game.Instance.QiangDiZhu(player);
     }
 
     public void AddDizhuPoker()
     {
         List<poker> pokers = Game.Instance.GetDizhuPoker();
         Game.Instance.DoGameDiZhuOver();
-        StartCoroutine(IEnumeratorFaPai(pokers));
+        StartCoroutine(IEnumeratorFaPai(pokers, SortPokers));
+        //SortPokers();
         player.Status = STATUS.LANDLORD;
-        ReadyChuPoker();
+        player.Next.Status = STATUS.PERSANT1;
+        player.Next.Next.Status = STATUS.PERSANT2;
+        BeginPlayerChuPai(player);
     }
 
-    public void ReadyChuPoker()
-    {
+//     public void ReadyChuPoker()
+//     {
+//         time = 30;
+//         messageLabel.text = time.ToString();
+//         beginTime = true;
+//         BuChu.gameObject.SetActive(true);
+//     }
+//     
 
-    }
-
-    public void BegianQiangDiZhu()
+    public void BegianQiangDiZhu(Player p)
     {
-        Qiang.gameObject.SetActive(true);
-        BuQiang.gameObject.SetActive(true);
-        beginTime = true;
+        if (player == p)
+        {
+            Qiang.gameObject.SetActive(true);
+            BuQiang.gameObject.SetActive(true);
+            beginTime = true;
+        }
     }
 
 
@@ -164,7 +199,6 @@ public class PlayerControl : MonoBehaviour
         if(beginTime)
         {
             timeStep += Time.deltaTime;
-            Debug.Log(timeStep);
             if(timeStep>1)
             {
                 time -=1;
@@ -172,7 +206,7 @@ public class PlayerControl : MonoBehaviour
                 timeStep = 0;
                 if(time == 0)
                 {
-                    GiveUpDiZhu();
+                    TimeDone();
                     beginTime = false;
                 }
                 
@@ -180,8 +214,88 @@ public class PlayerControl : MonoBehaviour
         }
     }
 
-//    public void QiangDiZhu(bool )
-//    {
-//        Game.Instance.ComparePlayerBeishu()
-//    }
+    void GetDiZhu(Player p, bool isGet)
+    {
+        if(p==player)
+        {
+            if (!isGet)
+            {
+                Game.Instance.DoGameBeginPlayerQiangDiZhu(p.Next);
+            }
+            else
+            {
+                AddDizhuPoker();
+            }
+        }
+    }
+
+     public void GiveUpDizhu()
+    {
+        player.BeiShu = -1;
+        Qiang.gameObject.SetActive(false);
+        BuQiang.gameObject.SetActive(false);
+        beginTime = false;
+        messageLabel.gameObject.SetActive(false);
+        Game.Instance.DoGameBeginPlayerQiangDiZhu(player.Next);
+    }
+
+    void SortPokers()
+    {
+        List<poker> pokes = new List<poker>();
+        foreach(PuKe puke in list)
+        {
+            pokes.Add(puke.Poker);
+        }
+        pokes.Sort();
+        for(int i = 0;i<list.Count;i++)
+        {
+            if(list[i].Poker!=pokes[i])
+            {
+                list[i].SetName(pokes[i].ToString());
+            }
+        }
+    }
+
+
+    void BeginPlayerChuPai(Player p)
+    {
+        if(p==player)
+        {
+            time = 30;
+            beginTime = true;
+            Chupai.gameObject.SetActive(true);
+            BuChu.gameObject.SetActive(true);
+        }
+    }
+    public void BuChuPai()
+    {
+        Game.Instance.DoGameBeginPlayerChuPai(player.Next);
+        beginTime = false;
+        Chupai.gameObject.SetActive(false);
+        BuChu.gameObject.SetActive(false);
+    }
+
+    void RemovePokers(List<PuKe> pokers)
+    {
+        foreach(PuKe p in pokers)
+        {
+            list.Remove(p);
+        }
+        AdjusetPosition();
+    }
+
+    void MoveCilckPuKe()
+    {
+        
+    }
+
+    List<poker> GetPukeListPoker()
+    {
+        List<poker> pokers = new List<poker>();
+        foreach(PuKe p in clickPuke)
+        {
+            pokers.Add(p.Poker);
+        }
+        return pokers;
+    }
 }

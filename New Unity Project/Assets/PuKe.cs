@@ -16,9 +16,11 @@ public class PuKe : MonoBehaviour {
     {
         get { return isClick; }
     }
-    void SetName(string name)
+    public void SetName(string name)
     {
-
+        UISprite sprite = GetComponent<UISprite>();
+        sprite.spriteName = name;
+        sprite.MarkAsChanged();
     }
 
     void SetPosition(Vector3 postion)
@@ -45,4 +47,7 @@ public class PuKe : MonoBehaviour {
         isClick = !isClick;
         transform.parent.SendMessage("ClickPoker", this, SendMessageOptions.DontRequireReceiver);
     }
+
+   
+
 }
