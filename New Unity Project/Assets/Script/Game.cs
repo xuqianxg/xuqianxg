@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
-
+using UnityEngine.SceneManagement;
 
 public enum DIRECTION
 {
@@ -37,6 +37,7 @@ public class PokerData
 {
     public POKERCOMBINATION PokerCombination;
     public List<int> list = new List<int>();
+    public Player player;
 }
 public class Game
 {
@@ -191,9 +192,10 @@ public class Game
         return pokers;
     }
 
-    public bool Chupai(List<poker> list)
+    public bool Chupai(List<poker> list,Player player)
     {
         PokerData pokerData = GetPokers(list);
+        pokerData.player = player;
         bool res = false;
         if (pokerData.PokerCombination == POKERCOMBINATION.ERROR) res = false;
         if(beforPoker == null )
@@ -203,43 +205,11 @@ public class Game
         }
         else
         {
-           
-           /* switch (beforPoker.PokerCombination)
+            if (pokerData.player == beforPoker.player)
             {
-                case POKERCOMBINATION.DUIZI:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.DUIZI && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                case POKERCOMBINATION.FEIJI:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.SAN && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                case POKERCOMBINATION.SAN:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.SAN && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                case POKERCOMBINATION.SANDAIER:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.SANDAIER && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                case POKERCOMBINATION.SANDAIYI:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.SANDAIYI && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                case POKERCOMBINATION.SHUNZI:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.SHUNZI && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                    break;
-                case POKERCOMBINATION.SINGLE:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN) return true;
-                    if (pokerData.PokerCombination == POKERCOMBINATION.SINGLE && pokerData.list[0] > beforPoker.list[0]) return true;
-                    return false;
-                case POKERCOMBINATION.ZHADAN:
-                    if (pokerData.PokerCombination == POKERCOMBINATION.ZHADAN && (pokerData.list[0] > beforPoker.list[0] || pokerData.list[0]==0)) return true;
-                    return false;
-            }*/
-             if (pokerData.PokerCombination == beforPoker.PokerCombination)
+                res = true;
+            }
+            else if (pokerData.PokerCombination == beforPoker.PokerCombination)
             {
                 if (beforPoker.PokerCombination != POKERCOMBINATION.ZHADAN)
                 {
@@ -379,7 +349,22 @@ public class Game
 
     bool IsShuangShunzi(List<poker> pokers)//双顺子  445566
     {
-        return true;
+        List<poker> p = new List<poker>();
+        if(pokers.Count%2==0)
+        {
+            pokers.Sort();
+            for(int i =0;i<pokers.Count;i=i+2)
+            {
+                if (pokers[i].Value == pokers[i + 1].Value)
+                {
+                    p.Add(pokers[i]);
+                }
+                else 
+                    return false; 
+            }
+            
+        }
+        return false;
     }
 
     bool IsFeiji(List<poker> pokers)
@@ -419,7 +404,7 @@ public class Game
 
     public void QiangDiZhu(Player p)
     {
-
+        p.Next.BeiShu == -1 && p.Next.Next.BeiShu==-1
         if (p.BeiShu == 3 || p.Next.BeiShu == -1)
         {
             DoGameGetDiZhu(p,true);
@@ -450,6 +435,10 @@ public class Game
     {
         beforPoker = GetPokers(p);
     }
+    public void GameOver()
+    {
+        SceneManager.LoadSceneAsync("DouDiZhu", LoadSceneMode.Single);
+    }
 }
 public enum STYLE
 {
@@ -470,16 +459,6 @@ public class poker : IComparable
         Style = s;
         Value = v;
     }
-//     public static bool operator ==(poker p1, poker p2)
-//     {
-//         return p1.Value == p2.Value;
-// 
-//     }
-// 
-//     public static bool operator !=(poker p1, poker p2)
-//     {
-//         return p1.Value != p2.Value;
-//     }
     public static bool operator >(poker p1, poker p2)
     {
         if (p1.Value == p2.Value)

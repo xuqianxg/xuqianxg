@@ -124,10 +124,16 @@ public class PlayerControl : MonoBehaviour
    public void ChuPai()
    {
        if (clickPuke.Count == 0) return;
-       if (Game.Instance.Chupai(GetPukeListPoker()))
+       if (Game.Instance.Chupai(GetPukeListPoker(),player))
        {
            RemovePokers(clickPuke);
+           if(list == null || list.Count == 0)
+           {
+               
+           }
+           AdjusetPosition();
            BuChuPai();
+           MoveCilckPuKe();
        }
    }
    private string GetPokerSpriteName(poker p)
@@ -172,16 +178,7 @@ public class PlayerControl : MonoBehaviour
         player.Next.Status = STATUS.PERSANT1;
         player.Next.Next.Status = STATUS.PERSANT2;
         BeginPlayerChuPai(player);
-    }
-
-//     public void ReadyChuPoker()
-//     {
-//         time = 30;
-//         messageLabel.text = time.ToString();
-//         beginTime = true;
-//         BuChu.gameObject.SetActive(true);
-//     }
-//     
+    }     
 
     public void BegianQiangDiZhu(Player p)
     {
@@ -281,12 +278,11 @@ public class PlayerControl : MonoBehaviour
         {
             list.Remove(p);
         }
-        AdjusetPosition();
     }
 
     void MoveCilckPuKe()
     {
-        
+        transform.parent.SendMessage("SetAlreadyChuPokers", clickPuke, SendMessageOptions.DontRequireReceiver);
     }
 
     List<poker> GetPukeListPoker()
@@ -297,5 +293,10 @@ public class PlayerControl : MonoBehaviour
             pokers.Add(p.Poker);
         }
         return pokers;
+    }
+
+    void PlayerWin()
+    {
+        
     }
 }

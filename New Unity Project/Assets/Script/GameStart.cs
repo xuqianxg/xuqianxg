@@ -3,14 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 public class GameStart : MonoBehaviour {
 
-    class PlayerControlData
-    {
-        public PlayerControl playerControl;
-        public PlayerControlData next;
-    }
-
     private DizhuPai dizhuPai;
-    //private PlayerControlData playerControlList = new PlayerControlData();
+    private GameObject alreadyChuPokersGo;
     void Awake()
     {
         Game.Instance.Init();
@@ -24,28 +18,19 @@ public class GameStart : MonoBehaviour {
         GameObject player = NGUITools.AddChild(gameObject, prefab);
         player.transform.localPosition = new Vector3(-390, 100, 0);
         player.transform.localEulerAngles = new Vector3(0, 0,-90);
-        PlayerControl playerControl = player.GetComponent<PlayerControl>();
-        playerControl.Player =  (Game.Instance.Player1);
-       // playerControlList.playerControl = playerControl;
+        PlayerControl playerControl1 = player.GetComponent<PlayerControl>();
+        playerControl1.Player = (Game.Instance.Player1);
 
         player = NGUITools.AddChild(gameObject, prefab);
         player.transform.localPosition = new Vector3(0, -330, 0);
         PlayerControl playerControl3 = player.GetComponent<PlayerControl>();
         playerControl3.Player = (Game.Instance.Player3);
-        PlayerControlData pcl = new PlayerControlData();
-        pcl.playerControl = playerControl3;
-       // playerControlList.next = pcl;
 
         player = NGUITools.AddChild(gameObject, prefab);
         player.transform.localPosition = new Vector3(390, 100, 0);
         player.transform.localEulerAngles = new Vector3(0, 0, 90);
         PlayerControl playerControl2 = player.GetComponent<PlayerControl>();
         playerControl2.Player = (Game.Instance.Player2);
-        PlayerControlData pcl1 = new PlayerControlData();
-        pcl1.playerControl = playerControl2;
-       // playerControlList.next.next = pcl1;
-
-       // playerControlList.next.next.next = playerControlList;
         Game.Instance.XiPai();
     }
     
@@ -54,7 +39,6 @@ public class GameStart : MonoBehaviour {
     {
         go.SetActive(false);
         Game.Instance.DoGameFapai();
-        //WaitUntil()
 
     }
 
@@ -64,46 +48,34 @@ public class GameStart : MonoBehaviour {
         GameObject dizhuPaiGo = NGUITools.AddChildNotLoseAnyThing(gameObject, prefab);
         dizhuPai = dizhuPaiGo.GetComponent<DizhuPai>();
         Game.Instance.WhoQiangDizhu();
-        //playerControlList.playerControl.BegianQiangDiZhu();
+
     }
 
-    void SetDizhuPoker(List<poker> list)
-    {
-      
-    }
     void OnDestroy()
     {
          Game.Instance.GameBeginDizhuPoker -= this.DizhuPoker;
     }
-
-//     PlayerControlData GetPlayerControlData(PlayerControl playerControl)
-//     {
-//         PlayerControlData p = playerControlList;
-//         while(p.next!=playerControlList)
-//         {
-//             if (p.playerControl == playerControl) return p;
-//             else p = p.next;
-//         }
-//         if (p.playerControl == playerControl) return p;
-//         return null;
-//     }
-//     public void QiangDizhu(PlayerControl playerControl)
-//     {
-//         PlayerControlData p = GetPlayerControlData(playerControl);
-//         if (p.playerControl.Beishu == 3 || p.next.playerControl.Beishu == -1)
-//         {
-//             p.playerControl.AddDizhuPoker();
-//         }
-//         else 
-//         {
-//             p.next.playerControl.BegianQiangDiZhu();
-//         }
-//     }
-
-    public void QiangDizhu(Player player)
+   
+    public void SetAlreadyChuPokers( List<PuKe> list)
     {
-
+        if (alreadyChuPokersGo != null)
+        {
+            Destroy(alreadyChuPokersGo);
+            alreadyChuPokersGo = null;
+        }
+        GameObject prefab = ResLoader.Load("Prefab/GameObject") as GameObject;
+        prefab.name = "AlreadyChuPokers";
+        alreadyChuPokersGo = NGUITools.AddChildNotLoseAnyThing(gameObject, prefab);
+        alreadyChuPokersGo.transform.localPosition = new Vector3(0, -33, 0);
+        int count = list.Count;
+        float lenght = count * Game.PuKeSpacing + 105;
+        Vector3 leftPosition = new Vector3(0 - lenght / 2, 0, 0);
+        for (int i = 0; i < count; i++)
+        {
+            //Vector3 position = list[i].transform.localPosition;
+            list[i].transform.parent = alreadyChuPokersGo.transform;
+            list[i].transform.localPosition = new Vector3(leftPosition.x + 105 / 2 + Game.PuKeSpacing * i, leftPosition.y, leftPosition.z);
+            list[i].transform.localEulerAngles = new Vector3(0, 0, 0);
+        }
     }
-
-
 }
