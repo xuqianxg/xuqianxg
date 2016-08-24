@@ -404,12 +404,12 @@ public class Game
 
     public void QiangDiZhu(Player p)
     {
-        p.Next.BeiShu == -1 && p.Next.Next.BeiShu==-1
-        if (p.BeiShu == 3 || p.Next.BeiShu == -1)
+       
+        if (p.BeiShu == 3 || (p.Next.BeiShu ==-1 && p.Next.BeiShu==-1))
         {
             DoGameGetDiZhu(p,true);
         }
-        else
+        else 
         {
             DoGameGetDiZhu(p, false);
         }

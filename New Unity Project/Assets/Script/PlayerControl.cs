@@ -39,6 +39,7 @@ public class PlayerControl : MonoBehaviour
         GameObject puke = NGUITools.AddChild(gameObject, prefab);
         UISprite sprite = puke.GetComponent<UISprite>();
         string name = GetPokerSpriteName(p);
+        Debug.Log(name);
         sprite.spriteName = name;
         sprite.MarkAsChanged();
         PuKe pk = puke.GetComponent<PuKe>();
@@ -104,7 +105,7 @@ public class PlayerControl : MonoBehaviour
 
    public void ClickPoker(PuKe p)
     {
-        Debug.Log(p.ToString());
+        Debug.Log(p.Poker.ToString() + "       "+p.gameObject.transform.localPosition);
         if (p.IsClick)
         {
             if (!clickPuke.Contains(p))
@@ -134,6 +135,7 @@ public class PlayerControl : MonoBehaviour
            AdjusetPosition();
            BuChuPai();
            MoveCilckPuKe();
+           clickPuke.Clear();
        }
    }
    private string GetPokerSpriteName(poker p)
@@ -249,6 +251,7 @@ public class PlayerControl : MonoBehaviour
             if(list[i].Poker!=pokes[i])
             {
                 list[i].SetName(pokes[i].ToString());
+                list[i].Poker = pokes[i];
             }
         }
     }
@@ -262,6 +265,7 @@ public class PlayerControl : MonoBehaviour
             beginTime = true;
             Chupai.gameObject.SetActive(true);
             BuChu.gameObject.SetActive(true);
+            messageLabel.gameObject.SetActive(true);
         }
     }
     public void BuChuPai()
@@ -270,6 +274,7 @@ public class PlayerControl : MonoBehaviour
         beginTime = false;
         Chupai.gameObject.SetActive(false);
         BuChu.gameObject.SetActive(false);
+        messageLabel.gameObject.SetActive(false);
     }
 
     void RemovePokers(List<PuKe> pokers)
