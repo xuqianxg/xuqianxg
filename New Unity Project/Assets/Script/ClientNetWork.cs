@@ -29,9 +29,9 @@ namespace GEM_NET_LIB
         byte[] MakeStream(int msgID, MemoryStream data);
         byte[] MakeDataStream(int msgId, byte[] data);
         void Reset();
-     }
+    }
 
-    public class MemoryStreamEx:MemoryStream
+    public class MemoryStreamEx : MemoryStream
     {
         public void Clear()
         {
@@ -45,12 +45,9 @@ namespace GEM_NET_LIB
         E_CNWS_ON_CONNECTED_FAILED,
         E_CNWS_ON_DISCONNECTED,
     }
-    public delegate void dNetWorkStateCallBack (EClientNetWorkState a_eState,string ip,ushort port);
+    public delegate void dNetWorkStateCallBack(EClientNetWorkState a_eState, string ip, ushort port);
     public class CClientNetWorkCtrl
     {
-        private IAsyncResult m_ar_Recv = null;
-        private IAsyncResult m_ar_Send = null;
-        private IAsyncResult m_ar_Connect = null;
         private Socket m_ClientSocket = null;
         private string m_strRomoteIP = "127.0.0.1";
         private ushort m_uRemotePort = 0;
@@ -66,7 +63,7 @@ namespace GEM_NET_LIB
         private readonly int CONECT_TIME_OUT = 10;
         private float connect_timeout = 0;
         private bool isReceived = false;
-        
+
         public bool IsConnect()
         {
             return m_ClientSocket != null ? m_ClientSocket.Connected : false;
@@ -93,11 +90,11 @@ namespace GEM_NET_LIB
             if (m_SateCallBack != null)
                 m_SateCallBack -= callBack;
         }
-        public bool Connct(string a_strRoteIP,ushort a_uPort)
+        public bool Connct(string a_strRoteIP, ushort a_uPort)
         {
-            if(m_ClientSocket == null)
+            if (m_ClientSocket == null)
             {
-                try 
+                try
                 {
                     m_ClientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 }
@@ -122,9 +119,9 @@ namespace GEM_NET_LIB
             return false;
         }
 
-        void SocketEventArg_Completed(object sender,SocketAsyncEventArgs e)
+        void SocketEventArg_Completed(object sender, SocketAsyncEventArgs e)
         {
-            switch(e.LastOperation)
+            switch (e.LastOperation)
             {
                 case SocketAsyncOperation.Connect:
                     break;
@@ -138,7 +135,7 @@ namespace GEM_NET_LIB
         }
         void ProcessConnect(SocketAsyncEventArgs e)
         {
-            if(e.SocketError == SocketError.Success)
+            if (e.SocketError == SocketError.Success)
             {
                 m_eNetWorkState = EClientNetWorkState.E_CNWS_NORMAL;
                 mReceiveA = new SocketAsyncEventArgs();
@@ -146,21 +143,21 @@ namespace GEM_NET_LIB
                 mReceiveA.Completed += SocketEventArg_Completed;
                 isReceived = true;
                 connect_timeout = 0;
-                Reveive();
+                Receive();
             }
             else
             {
-                DiDisconnect();
+                Disconnect();
             }
         }
 
         void ProcessSend(SocketAsyncEventArgs e)
         {
-            if(e.SocketError == SocketError.Success)
+            if (e.SocketError == SocketError.Success)
             {
-                lock(m_SendQueue)
+                lock (m_SendQueue)
                 {
-                    if(m_SendQueue.Count ==0)
+                    if (m_SendQueue.Count == 0)
                     {
                         mSendFlag = false;
                     }
@@ -172,35 +169,36 @@ namespace GEM_NET_LIB
             }
             else
             {
-                DiDisconnect();
+                Disconnect();
             }
         }
 
         void PricessReceive(SocketAsyncEventArgs e)
         {
-            if(e.SocketError == SocketError.Success)
+            if (e.SocketError == SocketError.Success)
             {
-                if(e.BytesTransferred > 0)
+                if (e.BytesTransferred > 0)
                 {
-                    lock(m_CommunicateionMem)
+                    lock (m_CommunicateionMem)
                     {
                         m_CommunicateionMem.Write(e.Buffer, 0, e.BytesTransferred);
                     }
-                    Reveive();
+                    Receive();
                 }
             }
             else
             {
-                DiDisconnect();
+                DidDisconnect();
             }
         }
         public bool ReConnect()
         {
-            if(m_strRomoteIP !=null)
+            if (m_strRomoteIP != null)
             {
                 ReleaseSocket();
                 return Connct(m_strRomoteIP, m_uRemotePort);
             }
+            return false;
         }
 
         public bool SendMessage(int msgID, MemoryStream data)
@@ -225,17 +223,17 @@ namespace GEM_NET_LIB
             return false;
         }
 
-        public bool SendMessage(int msgID,int dataType,byte[] data)
+        public bool SendMessage(int msgID, int dataType, byte[] data)
         {
-            if(m_Writer !=null)
+            if (m_Writer != null)
             {
                 byte[] newData = m_Writer.MakeDataStream(dataType, data);
                 MemoryStream mStream = new MemoryStream();
                 mStream.Write(newData, 0, newData.Length);
                 byte[] stream = m_Writer.MakeStream(msgID, mStream);
-                lock(m_SendQueue)
+                lock (m_SendQueue)
                 {
-                    if(mSendFlag == false)
+                    if (mSendFlag == false)
                     {
                         mSendFlag = true;
                         Send(stream);
@@ -250,7 +248,7 @@ namespace GEM_NET_LIB
             return false;
         }
 
-        public bool SendUnsafeMessga(int msgID,byte[] data)
+        public bool SendUnsafeMessga(int msgID, byte[] data)
         {
 
             if (m_Writer != null)
@@ -275,18 +273,18 @@ namespace GEM_NET_LIB
             return false;
         }
 
-        public void ReleseSocket()
+        public void ReleaseSocket()
         {
-            if(m_ClientSocket != null)
+            if (m_ClientSocket != null)
             {
-                if(m_ClientSocket.Connected == true)
+                if (m_ClientSocket.Connected == true)
                 {
-                    try 
+                    try
                     {
                         m_ClientSocket.Shutdown(SocketShutdown.Both);
 
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         Debug.Log(e.Message);
                     }
@@ -306,62 +304,122 @@ namespace GEM_NET_LIB
 
         public void Update()
         {
-            lock(m_CommunicateionMem)
+            lock (m_CommunicateionMem)
             {
-                if(m_CommunicateionMem.Length>0)
+                if (m_CommunicateionMem.Length > 0)
                 {
-                    if(m_Reader!=null)
+                    if (m_Reader != null)
                     {
                         m_Reader.DidReadData(m_CommunicateionMem.GetBuffer(), (int)m_CommunicateionMem.Length);
                     }
                     m_CommunicateionMem.SetLength(0);
                 }
             }
-            lock(m_eNetWorkState)
+            lock (m_eNetWorkState)
             {
                 EClientNetWorkState eState = (EClientNetWorkState)m_eNetWorkState;
-                if(eState > EClientNetWorkState.E_CNWS_NORMAL)
+                if (eState > EClientNetWorkState.E_CNWS_NORMAL)
                 {
-                    if(m_ClientSocket !=null)
+                    if (m_ClientSocket != null)
                     {
                         ReleaseSocket();
                         CallBackNetState(eState);
                         eState = EClientNetWorkState.E_CNWS_NDT_UNABLE;
                     }
                 }
-                else if(isReceived == false)
+                else if (isReceived == false)
                 {
                     connect_timeout += Time.deltaTime;
-                    if(connect_timeout > CONECT_TIME_OUT)
+                    if (connect_timeout > CONECT_TIME_OUT)
                     {
                         connect_timeout = 0;
-                        DiDisconnect();
+                        Disconnect();
                     }
                 }
             }
         }
 
         void CallBackNetState(EClientNetWorkState state)
-        { 
-            if(m_SateCallBack !=null)
+        {
+            if (m_SateCallBack != null)
             {
                 m_SateCallBack(state, m_strRomoteIP, m_uRemotePort);
             }
-        
+
         }
-        
 
-        void Send(byte[] bytes) { }
+        public void SetSocketSendNoDeley(bool nodely)
+        {
+            if(m_ClientSocket !=null)
+            {
+                m_ClientSocket.NoDelay = nodely;
+            }
+        }
 
-        void Reveive() { }
-        public bool DiDisconnect() 
+        private void DidConnectError(Exception e)
+        {
+            lock(m_eNetWorkState)
+            {
+                m_eNetWorkState = EClientNetWorkState.E_CNWS_ON_CONNECTED_FAILED;
+            }
+        }
+        private void DidDisconnect()
+        {
+            lock(m_eNetWorkState)
+            {
+                m_eNetWorkState = EClientNetWorkState.E_CNWS_ON_DISCONNECTED;
+            }
+        }
+        private void Receive()
+        {
+            try
+            {
+                if(m_ClientSocket.ReceiveAsync(mReceiveA ) == false)
+                {
+
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+                DidDisconnect();
+            }
+        }
+        bool Send(byte[] bytes) 
+        {
+            try
+            {
+                mAsyncArgs.SetBuffer(bytes, 0, bytes.Length);
+                if(m_ClientSocket.SendAsync(mAsyncArgs) == false)
+                {
+
+                }
+                return true;
+            }
+            catch(Exception e)
+            {
+                DidDisconnect();
+            }
+            return false;
+        }
+
+
+        public static IPAddress GetLocalIP()
+        {
+            string hostNmae = Dns.GetHostName();
+            IPAddress[] ips = Dns.GetHostAddresses(hostNmae);
+            return ips.Length > 0 ? ips[0] : null;
+        }
+        public string GetLocalIPString()
+        {
+            IPAddress ip = GetLocalIP();
+            return ip != null ? ip.ToString() : null;
+        }
+
+        public bool Disconnect()
         {
             ReleaseSocket();
             return true;
-        }
-       public void ReleaseSocket()
-        {
-
         }
     }
 }

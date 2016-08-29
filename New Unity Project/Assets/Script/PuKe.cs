@@ -3,7 +3,6 @@ using System.Collections;
 
 public class PuKe : MonoBehaviour {
 
-    private string name;
     private bool isClick = false;
     private poker p;
 
