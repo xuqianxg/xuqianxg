@@ -172,3 +172,24 @@ public class NetOpcodes_S2CString :Signleton<NetOpcodes_S2CString>
         return m_StringMap.TryGetValue(msgID, out strOut);
     }
 }
+
+
+public class CClientHandleMessage :ILogicHandleMessage
+{
+    private OnHandleOneMessga[] m_HandleMap;
+    void ILogicHandleMessage.ClientHnadleMessage(CNetRecvMsg msg)
+    {
+        if(msg.m_nMsgID>=0 && msg.m_nMsgID<m_HandleMap.Length)
+        {
+            OnHandleOneMessga handle = m_HandleMap[msg.m_nMsgID];
+            if(handle != null)
+            {
+                handle(msg);
+            }
+            else
+            {
+                Debug.Log("error  " + msg.m_nMsgID);
+            }
+        }
+    }
+}

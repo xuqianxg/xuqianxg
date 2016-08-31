@@ -1,0 +1,8 @@
+package net_protocol;
+option java_package = "com.lk.test";
+option java_outer_classname = "BaseType";
+
+message PBString
+{
+	required string str_value = 1;
+}
