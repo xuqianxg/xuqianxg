@@ -1,0 +1,9 @@
+c:\users\xuqian\documents\visual studio 2013\Projects\SocketServer\SocketServer\bin\Debug\SocketServer.exe.config
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\obj\Debug\SocketServer.csprojResolveAssemblyReference.cache
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\bin\Debug\SocketServer.exe
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\bin\Debug\SocketServer.pdb
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\bin\Debug\protobuf-net.dll
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\bin\Debug\protobuf-net.pdb
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\bin\Debug\protobuf-net.xml
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\obj\Debug\SocketServer.exe
+C:\Users\xuqian\Documents\Visual Studio 2013\Projects\SocketServer\SocketServer\obj\Debug\SocketServer.pdb
