@@ -14,10 +14,12 @@ namespace SocketServer
         static void Main(string[] args)
         {
             AutoResetEvent autoReset = new AutoResetEvent(false);
-            Client.NetWork.Connect("", 9999);
-            PBString pb = new PBString();
-            pb.str_value="hello world";
-            Client.NetWork.SendNetMessage<PBString>(1, pb);
+            Server.Instance.Init();
+            Server.NetWork.Connect("", 9999);
+            
+           // PBString pb = new PBString();
+            //pb.str_value="hello world";
+            //Server.NetWork.SendNetMessage<PBString>(1, pb);
             autoReset.WaitOne();
         }
     }

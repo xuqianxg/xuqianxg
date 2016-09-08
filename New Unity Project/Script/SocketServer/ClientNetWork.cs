@@ -21,7 +21,7 @@ namespace GEM_NET_LIB
     }
     public interface INetMessageReader
     {
-        void DidReadData(byte[] data, int size);
+        void DidReadData(Socket clientSocket,byte[] data, int size);
         void Reset();
     }
     public interface INetMessageWriter
@@ -55,6 +55,11 @@ namespace GEM_NET_LIB
         private INetMessageReader m_Reader = null;
         private INetMessageWriter m_Writer = null;
         private dNetWorkStateCallBack m_SateCallBack = null;
+        class ReceiveData
+        {
+            Socket clientSocket = null;
+            MemoryStreamEx m_CommunicateionMem = new MemoryStreamEx();
+        }
         private MemoryStreamEx m_CommunicateionMem = new MemoryStreamEx();
         private object m_eNetWorkState = EClientNetWorkState.E_CNWS_NDT_UNABLE;
         private Queue<byte[]> m_SendQueue = new Queue<byte[]>();
@@ -62,28 +67,40 @@ namespace GEM_NET_LIB
         private SocketAsyncEventArgs mReceiveA = new SocketAsyncEventArgs();
         private SocketAsyncEventArgs acceptArgs = new SocketAsyncEventArgs();
         private bool mSendFlag = false;
-        private readonly int CONECT_TIME_OUT = 10;
-        private float connect_timeout = 0;
-        private bool isReceived = false;
-
         private int m_numConnections=256; //最大支持连接个数
         private int m_receiveBufferSize=10; //每个连接接收缓存大小
         private Semaphore m_maxNumberAcceptedClients; //限制访问接收连接的线程数，用来控制最大并发数
         private AutoResetEvent autoEvent = new AutoResetEvent(false);
         private int m_socketTimeOutMS; //Socket最大超时时间，单位为MS
         public int SocketTimeOutMS { get { return m_socketTimeOutMS; } set { m_socketTimeOutMS = value; } }
-
-        private AsyncSocketUserTokenPool m_asyncSocketUserTokenPool;
-        private AsyncSocketUserTokenList m_asyncSocketUserTokenList;
-
+        SocketAsyncEventArgsPool m_readWritePool;
        // AutoResetEvent m_maxNumberAcceptedClients = new AutoResetEvent(false);
 
+        public CClientNetWorkCtrl(int num)
+        {
+            m_numConnections = num;
+            m_maxNumberAcceptedClients = new Semaphore(num, num);
+            m_readWritePool = new SocketAsyncEventArgsPool(num);
+            Init();
+        }
 
+        public void Init()
+        {
+            SocketAsyncEventArgs readWriteEventArg;
+            for(int i=0;i<m_numConnections;i++)
+            {
+                readWriteEventArg = new SocketAsyncEventArgs();
+                readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(SocketEventArg_Completed);
+                byte[] asyncReceiveBuffer = new byte[4096];
+                readWriteEventArg.SetBuffer(asyncReceiveBuffer, 0, asyncReceiveBuffer.Length);
+                m_readWritePool.Push(readWriteEventArg);
+            }
+        }
 
         public bool IsConnect()
         {
-            return true;
-           // return m_ClientSocket != null ? m_ClientSocket.Connected : false;
+            //return true;
+            return listenSocket != null ;
         }
         public INetMessageReader Reader
         {
@@ -114,7 +131,9 @@ namespace GEM_NET_LIB
             listenSocket = new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             listenSocket.Bind(localEndPoint);
             listenSocket.Listen(256);
+            mAsyncArgs.Completed += new EventHandler<SocketAsyncEventArgs>(SocketEventArg_Completed); 
             StartAccept(null);
+            Console.ReadKey();
             //m_daemonThread = new DaemonThread(this);
             return true;
         }
@@ -127,20 +146,11 @@ namespace GEM_NET_LIB
             }
             else
             {
-                mAsyncArgs.AcceptSocket = null; //释放上次绑定的Socket，等待下一个Socket连接  
+                acceptEventArgs.AcceptSocket = null; //释放上次绑定的Socket，等待下一个Socket连接  
             }
 
-//             try
-//             {
-//                 m_maxNumberAcceptedClients.WaitOne(); //获取信号量 
-//             }
-//             catch(Exception e)
-//             {
-//                 Console.Write(e.Message);
-//             }
-
+            m_maxNumberAcceptedClients.WaitOne();
             bool willRaiseEvent = listenSocket.AcceptAsync(acceptEventArgs);
-            autoEvent.WaitOne();
             if (!willRaiseEvent)
             {
                 ProcessAccept(acceptEventArgs);
@@ -150,14 +160,11 @@ namespace GEM_NET_LIB
 
         void AcceptEventArg_Completed(object sender, SocketAsyncEventArgs acceptEventArgs)
         {
-            try
             {
+                Console.WriteLine("one");
                 ProcessAccept(acceptEventArgs);
             }
-            catch (Exception E)
-            {
-                Console.WriteLine(string.Format("Accept client {0} error, message: {1}", acceptEventArgs.AcceptSocket, E.Message));
-            }
+
         }
 
         void SocketEventArg_Completed(object sender, SocketAsyncEventArgs e)
@@ -172,9 +179,6 @@ namespace GEM_NET_LIB
                 case SocketAsyncOperation.Receive:
                     ProcessReceive(e);
                     break;
-//                 case SocketAsyncOperation.Accept:
-//                     ProcessAccept(e);
-//                     break;
             }
         }
 
@@ -182,50 +186,23 @@ namespace GEM_NET_LIB
         {
             Console.WriteLine(string.Format("Client connection accepted. Local Address: {0}, Remote Address: {1}",
                 acceptEventArgs.AcceptSocket.LocalEndPoint, acceptEventArgs.AcceptSocket.RemoteEndPoint));
-            mAsyncArgs.Completed += new EventHandler<SocketAsyncEventArgs>(SocketEventArg_Completed);
-            ConnectSocket = acceptEventArgs.AcceptSocket;
-            //autoEvent.Reset();
-            autoEvent.Set();
-//             AsyncSocketUserToken userToken = m_asyncSocketUserTokenPool.Pop();
-//             m_asyncSocketUserTokenList.Add(userToken); //添加到正在连接列表  
-//             userToken.ConnectSocket = acceptEventArgs.AcceptSocket;
-//             userToken.ConnectDateTime = DateTime.Now;
-
-//             try
-//             {
-//                 bool willRaiseEvent = userToken.ConnectSocket.ReceiveAsync(userToken.ReceiveEventArgs); //投递接收请求  
-//                 if (!willRaiseEvent)
-//                 {
-//                     lock (userToken)
-//                     {
-//                         ProcessSend(acceptEventArgs);
-//                         //ProcessReceive(userToken.ReceiveEventArgs);
-//                     }
-//                 }
-//             }
-//             catch (Exception E)
-//             {
-//                 Console.WriteLine(string.Format("Accept client {0} error, message: {1}", userToken.ConnectSocket, E.Message));
-//             }
-
-           // StartAccept(acceptEventArgs); //把当前异步事件释放，等待下次连接  
-        }
-        void ProcessConnect(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
+            SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
+            readEventArgs.UserToken = acceptEventArgs.AcceptSocket;
+            readEventArgs.AcceptSocket = acceptEventArgs.AcceptSocket;
+           
+            try
             {
-                m_eNetWorkState = EClientNetWorkState.E_CNWS_NORMAL;
-                mReceiveA = new SocketAsyncEventArgs();
-                mReceiveA.SetBuffer(new byte[4096], 0, 4096);
-                mReceiveA.Completed += SocketEventArg_Completed;
-                isReceived = true;
-                connect_timeout = 0;
-                Receive();
+                bool willRaiseEvent = acceptEventArgs.AcceptSocket.ReceiveAsync(readEventArgs);
+                if (!willRaiseEvent)
+                {
+                    ProcessReceive(readEventArgs);
+                }
             }
-            else
+            catch(Exception e)
             {
-                Disconnect();
+                Console.WriteLine(e.Message);
             }
+           StartAccept(acceptEventArgs); //把当前异步事件释放，等待下次连接  
         }
 
         void ProcessSend(SocketAsyncEventArgs e)
@@ -252,7 +229,8 @@ namespace GEM_NET_LIB
 
         void ProcessReceive(SocketAsyncEventArgs e)
         {
-             Console.WriteLine("success  ");
+            Console.WriteLine("receive");
+            Console.WriteLine(e.AcceptSocket.RemoteEndPoint);
             if (e.SocketError == SocketError.Success)
             {
                 if (e.BytesTransferred > 0)
@@ -260,8 +238,17 @@ namespace GEM_NET_LIB
                     lock (m_CommunicateionMem)
                     {
                         m_CommunicateionMem.Write(e.Buffer, 0, e.BytesTransferred);
+                        if (m_Reader != null)
+                        {
+                             m_Reader.DidReadData(e.AcceptSocket, m_CommunicateionMem.GetBuffer(), (int)m_CommunicateionMem.Length);
+                        }
+                         m_CommunicateionMem.SetLength(0);
+                         bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(e);
+                         if (!willRaiseEvent)
+                         {
+                             ProcessReceive(e);
+                         }
                     }
-                    Receive();
                 }
             }
             else
@@ -279,6 +266,41 @@ namespace GEM_NET_LIB
             return false;
         }
 
+
+        public bool SendMessage(Socket clientSocket,int msgID,MemoryStream data)
+        {
+            if (m_Writer != null)
+            {
+                byte[] stream = m_Writer.MakeStream(msgID, data);
+                lock (m_SendQueue)
+                {
+                    if (mSendFlag == false)
+                    {
+                        mSendFlag = true;
+                        try
+                        {
+                            mAsyncArgs.SetBuffer(stream, 0, stream.Length);
+                            if (clientSocket.SendAsync(mAsyncArgs) == false)
+                            {
+                                Console.WriteLine("send error ");
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                            DidDisconnect(clientSocket);
+                        }
+                    }
+                    else
+                    {
+                        m_SendQueue.Enqueue(stream);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public bool SendMessage(int msgID, MemoryStream data)
         {
             if (m_Writer != null)
@@ -289,7 +311,20 @@ namespace GEM_NET_LIB
                     if (mSendFlag == false)
                     {
                         mSendFlag = true;
-                        Send(stream);
+                        try
+                        {
+                            mAsyncArgs.SetBuffer(stream, 0, stream.Length);
+                            if (ConnectSocket.SendAsync(mAsyncArgs) == false)
+                            {
+
+                            }
+                            return true;
+                        }
+                        catch (Exception e)
+                        {
+                            DidDisconnect();
+                        }
+                        return false;
                     }
                     else
                     {
@@ -380,43 +415,6 @@ namespace GEM_NET_LIB
             if (m_Writer != null) m_Writer.Reset();
         }
 
-//         public void Update()
-//         {
-//             lock (m_CommunicateionMem)
-//             {
-//                 if (m_CommunicateionMem.Length > 0)
-//                 {
-//                     if (m_Reader != null)
-//                     {
-//                         m_Reader.DidReadData(m_CommunicateionMem.GetBuffer(), (int)m_CommunicateionMem.Length);
-//                     }
-//                     m_CommunicateionMem.SetLength(0);
-//                 }
-//             }
-//             lock (m_eNetWorkState)
-//             {
-//                 EClientNetWorkState eState = (EClientNetWorkState)m_eNetWorkState;
-//                 if (eState > EClientNetWorkState.E_CNWS_NORMAL)
-//                 {
-//                     if (listenSocket != null)
-//                     {
-//                         ReleaseSocket();
-//                         CallBackNetState(eState);
-//                         eState = EClientNetWorkState.E_CNWS_NDT_UNABLE;
-//                     }
-//                 }
-//                 else if (isReceived == false)
-//                 {
-//                     connect_timeout += Time.deltaTime;
-//                     if (connect_timeout > CONECT_TIME_OUT)
-//                     {
-//                         connect_timeout = 0;
-//                         Disconnect();
-//                     }
-//                 }
-//             }
-//        }
-
         void CallBackNetState(EClientNetWorkState state)
         {
             if (m_SateCallBack != null)
@@ -448,6 +446,13 @@ namespace GEM_NET_LIB
                 m_eNetWorkState = EClientNetWorkState.E_CNWS_ON_DISCONNECTED;
             }
         }
+
+        private void DidDisconnect(Socket client)
+        {
+            if(client == null) return;
+            client.Shutdown(SocketShutdown.Both);
+        }
+
         private void Receive()
         {
             try
@@ -496,9 +501,55 @@ namespace GEM_NET_LIB
 
         public bool Disconnect()
         {
+            Console.WriteLine("Disconnect");
             ReleaseSocket();
             return true;
         }
+    }
+
+
+    class SocketAsyncEventArgsPool
+    {
+        Stack<SocketAsyncEventArgs> m_pool;
+
+        // Initializes the object pool to the specified size
+        //
+        // The "capacity" parameter is the maximum number of 
+        // SocketAsyncEventArgs objects the pool can hold
+        public SocketAsyncEventArgsPool(int capacity)
+        {
+            m_pool = new Stack<SocketAsyncEventArgs>(capacity);
+        }
+
+        // Add a SocketAsyncEventArg instance to the pool
+        //
+        //The "item" parameter is the SocketAsyncEventArgs instance 
+        // to add to the pool
+        public void Push(SocketAsyncEventArgs item)
+        {
+            if (item == null) { throw new ArgumentNullException("Items added to a SocketAsyncEventArgsPool cannot be null"); }
+            lock (m_pool)
+            {
+                m_pool.Push(item);
+            }
+        }
+
+        // Removes a SocketAsyncEventArgs instance from the pool
+        // and returns the object removed from the pool
+        public SocketAsyncEventArgs Pop()
+        {
+            lock (m_pool)
+            {
+                return m_pool.Pop();
+            }
+        }
+
+        // The number of SocketAsyncEventArgs instances in the pool
+        public int Count
+        {
+            get { return m_pool.Count; }
+        }
+
     }
 }
 

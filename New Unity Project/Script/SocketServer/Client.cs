@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using GEM_NET_LIB;
 
-    class Client : Signleton<Client>
+class Server : Signleton<Server>
     {
         private CNetWorkGlobal m_NetWorkGlobal = new CNetWorkGlobal();
         private CClientHandleMessage m_ClientHandle = new CClientHandleMessage();
@@ -25,7 +25,7 @@ using GEM_NET_LIB;
         }
         public static  CNetWorkGlobal NetWork
         {
-            get { return Client.instance.m_NetWorkGlobal; }
+            get { return Server.instance.m_NetWorkGlobal; }
         }
 
     }

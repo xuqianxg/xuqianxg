@@ -6,10 +6,12 @@ using GEM_NET_LIB;
 using System.IO;
 using ProtoBuf.Meta;
 using net_protocol;
+using System.Net.Sockets;
 public class CNetRecvMsg
 {
     public int m_nMsgID = 0;
     public MemoryStream m_DataMsg;
+    public Socket client;
     public T DeSerializeProtocol<T>()
     {
         m_DataMsg.Position = 0;
@@ -32,10 +34,11 @@ public class CNetRecvMsgBuilder : IReaderHandleMessage
         set {m_Logic = value;}
     }
 
-    void IReaderHandleMessage.HandleMessage(int msgID, MemoryStream data)
+    void IReaderHandleMessage.HandleMessage(Socket client, int msgID, MemoryStream data)
     {
         clientNetMsg.m_nMsgID = msgID;
         clientNetMsg.m_DataMsg = data;
+        clientNetMsg.client = client;
          Console.WriteLine(msgID + "   " + data);
         if(m_Logic !=null)
         {
@@ -72,7 +75,7 @@ class CNetWorkGlobal
         m_RecvBuilder = new CNetRecvMsgBuilder();
         m_Reader = new NetStreamReader();
         m_Reader.HandleMessage = m_RecvBuilder;
-        m_Ctrl = new CClientNetWorkCtrl();
+        m_Ctrl = new CClientNetWorkCtrl(500);
         m_Ctrl.Reader = m_Reader;
         m_Writer = new NetStreamWriter();
         m_Ctrl.Writer = m_Writer;
@@ -110,11 +113,11 @@ class CNetWorkGlobal
     {
         m_Ctrl.ReleaseSocket();
     }
-    public bool SendNetMessage<T>(int msgID,T data)
+    public bool SendNetMessage<T>(Socket client, int msgID,T data)
     {
         if(IsConnected() == true)
         {
-            return m_Ctrl.SendMessage(msgID, m_SendBuilder.Serialize<T>(data));
+            return m_Ctrl.SendMessage(client, msgID, m_SendBuilder.Serialize<T>(data));
         }
         return false;
     }
@@ -144,6 +147,14 @@ class CNetWorkGlobal
         }
         return false;
     }
+    public bool SendNetEmptyMessage(Socket client,int msgID)
+    {
+        if (IsConnected())
+        {
+            return m_Ctrl.SendMessage(client ,msgID, null);
+        }
+        return false;
+    }
     public void  Update()
     {
         //m_Ctrl.Update();
@@ -165,11 +176,21 @@ public class Signleton<T> where T:new()
     }
 }
 
-public class NetOpcodes_S2CEnmu
+public class NetOpcodes_C2SEnmu
 {
-    public static readonly int S2C_TEST = 1;
+    public static readonly int C2S_TEST = 1;
+    public static readonly int C2S_CRTATE = 2;
+    public static readonly int C2S_READY = 3;
     public static readonly int MAX = 64;
 }
+
+public class NetOpcodes_S2CEnmu
+{
+    public static readonly int S2C_CRTATE = 2;
+    public static readonly int S2C_READY = 3;
+    public static readonly int MAX = 64;
+}
+
 
 public class NetOpcodes_S2CString :Signleton<NetOpcodes_S2CString>
 {
@@ -181,6 +202,8 @@ public class NetOpcodes_S2CString :Signleton<NetOpcodes_S2CString>
    public  NetOpcodes_S2CString()
     {
         m_StringMap.Add(1, "C2S_TEST");
+        m_StringMap.Add(2, "C2S_CRTATE");
+        m_StringMap.Add(3, "C2S_READY");
     }
 }
 
@@ -206,14 +229,29 @@ public class CClientHandleMessage :ILogicHandleMessage
 
     public CClientHandleMessage()
     {
-        m_HandleMap = new OnHandleOneMessga[NetOpcodes_S2CEnmu.MAX];
-        m_HandleMap[NetOpcodes_S2CEnmu.S2C_TEST] = new OnHandleOneMessga(HandleTest);
-       
+        m_HandleMap = new OnHandleOneMessga[NetOpcodes_C2SEnmu.MAX];
+        m_HandleMap[NetOpcodes_C2SEnmu.C2S_CRTATE] = new OnHandleOneMessga(HandleOnCreate);
+        m_HandleMap[NetOpcodes_C2SEnmu.C2S_READY] = new OnHandleOneMessga(HandleOnReadStart);
     }
 
     void HandleTest(CNetRecvMsg msg)
     {
-        PBString pbString = msg.DeSerializeProtocol<net_protocol.PBString>();
-         Console.WriteLine(pbString.str_value);
+;
     }
+
+    void HandleOnCreate(CNetRecvMsg msg)
+    {
+        Console.WriteLine("HandleOnCreate");
+        Player player = new Player(msg.client,Game.Instance.playerList.Count+1);
+        Game.Instance.playerList.Add(player);
+        Server.NetWork.SendNetEmptyMessage(msg.client, 2);
+        // Server.NetWork.SendNetEmptyMessage(NetOpcodes_S2CEnmu.S2C_CRTATE);
+    }
+
+    void  HandleOnReadStart(CNetRecvMsg msg)
+    {
+        Console.WriteLine("HandleOnReadStart");
+        
+    }
+
 }

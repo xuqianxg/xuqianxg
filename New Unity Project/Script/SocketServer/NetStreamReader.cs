@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net;
 using System;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
 using System.Collections;
 using net_protocol;
 namespace GEM_NET_LIB
 {
     public interface IReaderHandleMessage
     {
-        void HandleMessage(int msgID, MemoryStream data);
+        void HandleMessage(Socket client, int msgID, MemoryStream data);
     }
     internal class CNetStreamBuffer
     {
@@ -74,18 +74,18 @@ namespace GEM_NET_LIB
         {
             set{m_HandleMessage = value;}
         }
-        void INetMessageReader.DidReadData(byte[] data,int size)
+        void INetMessageReader.DidReadData(Socket client,byte[] data,int size)
         {
 
 
             try
             {
-                MemoryStream msg = new MemoryStream(data, sizeof(int), size);
+                MemoryStream msg = new MemoryStream(data, sizeof(int), size-sizeof(int));
                 MemoryStream id = new MemoryStream(data, 0, sizeof(int));
                 int msgID = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(id.ToArray(), 0));
                 PBString pb = ProtoBuf.Serializer.Deserialize<PBString>(msg);
                 Console.WriteLine(pb.str_value);
-                m_HandleMessage.HandleMessage(msgID,msg);
+                m_HandleMessage.HandleMessage(client, msgID,msg);
                 msg.Close();
                 id.Close();
             }
