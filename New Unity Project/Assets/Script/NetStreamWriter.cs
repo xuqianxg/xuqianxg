@@ -20,9 +20,9 @@ namespace GEM_NET_LIB
             byte[] net_MsgID_byte = BitConverter.GetBytes(net_msgID);
             int net_data_Size = IPAddress.HostToNetworkOrder(net_MsgID_byte.Length + m_NotUseByte.Length + (data != null ? (int)data.Length : 0));
             byte[] net_Data_Size_byte = BitConverter.GetBytes(net_data_Size);
-            m_Buffer.Write(net_Data_Size_byte, 0, net_Data_Size_byte.Length);
+           // m_Buffer.Write(net_Data_Size_byte, 0, net_Data_Size_byte.Length);
             m_Buffer.Write(net_MsgID_byte, 0, net_MsgID_byte.Length);
-            m_Buffer.Write(m_NotUseByte, 0, m_NotUseByte.Length);
+/*            m_Buffer.Write(m_NotUseByte, 0, m_NotUseByte.Length);*/
             mCounter++;
             if (data != null)
                 m_Buffer.Write(data.GetBuffer(), 0, (int)data.Length);

@@ -10,6 +10,16 @@ using GEM_NET_LIB;
         private CNetWorkGlobal m_NetWorkGlobal = new CNetWorkGlobal();
         private CClientHandleMessage m_ClientHandle = new CClientHandleMessage();
 
+        public delegate void OnTest(string str);
+        public event OnTest Test;
+
+        public void DoTest(string str)
+        {
+            if(Test!=null)
+            {
+                Test(str);
+            }
+        }
 
         public void Init()
         {
@@ -28,5 +38,7 @@ using GEM_NET_LIB;
         {
             get { return Client.instance.m_NetWorkGlobal; }
         }
+
+
 
     }

@@ -6,11 +6,12 @@ using System;
 using System.IO;
 using System.Net;
 using System.Collections;
+using net_protocol;
 namespace GEM_NET_LIB
 {
     public interface IReaderHandleMessage
     {
-        void HandleMessage(int msgID, int data_type, MemoryStream data);
+        void HandleMessage(int msgID, MemoryStream data);
     }
     internal class CNetStreamBuffer
     {
@@ -75,7 +76,31 @@ namespace GEM_NET_LIB
         }
         void INetMessageReader.DidReadData(byte[] data,int size)
         {
-            MemoryStream activedStream = m_NetBuffer.GetActivedStream();
+
+
+            try
+            {
+                MemoryStream msg = new MemoryStream(data, sizeof(int), size);
+                MemoryStream id = new MemoryStream(data, 0, sizeof(int));
+                int msgID = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(id.ToArray(), 0));
+               // PBString pb = ProtoBuf.Serializer.Deserialize<PBString>(msg);
+               // NGUIDebug.Log(pb.str_value);
+                m_HandleMessage.HandleMessage(msgID,msg);
+                msg.Close();
+                id.Close();
+            }
+            catch(Exception e)
+            {
+                NGUIDebug.Log(e.Message);
+            }
+           /// NGUIDebug.Log(j + "   "+ BitConverter.ToString(msgBytes));
+
+
+
+
+
+
+           /* MemoryStream activedStream = m_NetBuffer.GetActivedStream();
             activedStream.Write(data, 0, size);
             byte[] nowData = activedStream.GetBuffer();
             long nowStreamLength = activedStream.Length;
@@ -162,7 +187,7 @@ namespace GEM_NET_LIB
                     break;
                 }
 
-            }
+            }*/
             
         }
 

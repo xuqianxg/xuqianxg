@@ -6,6 +6,7 @@ using GEM_NET_LIB;
 using System.IO;
 using ProtoBuf.Meta;
 using UnityEngine;
+using net_protocol;
 public class CNetRecvMsg
 {
     public int m_nMsgID = 0;
@@ -32,10 +33,11 @@ public class CNetRecvMsgBuilder : IReaderHandleMessage
         set {m_Logic = value;}
     }
 
-    void IReaderHandleMessage.HandleMessage(int msgID, int dataType, MemoryStream data)
+    void IReaderHandleMessage.HandleMessage(int msgID, MemoryStream data)
     {
         clientNetMsg.m_nMsgID = msgID;
         clientNetMsg.m_DataMsg = data;
+        Debug.Log(msgID + "   " + data);
         if(m_Logic !=null)
         {
             string msgName;
@@ -164,12 +166,24 @@ public class Signleton<T> where T:new()
     }
 }
 
+public class NetOpcodes_S2CEnmu
+{
+    public static readonly int S2C_TEST = 1;
+    public static readonly int S2C_CREATERESP = 2;
+    public static readonly int MAX = 64;
+}
+
 public class NetOpcodes_S2CString :Signleton<NetOpcodes_S2CString>
 {
     private Dictionary<int ,string> m_StringMap = new Dictionary<int,string>();
     public bool GetString(int msgID,out string strOut)
     {
         return m_StringMap.TryGetValue(msgID, out strOut);
+    }
+   public  NetOpcodes_S2CString()
+    {
+        m_StringMap.Add(1, "S2C_TEST");
+        m_StringMap.Add(2, "S2C_CREATERESP");
     }
 }
 
@@ -191,5 +205,24 @@ public class CClientHandleMessage :ILogicHandleMessage
                 Debug.Log("error  " + msg.m_nMsgID);
             }
         }
+    }
+
+    public CClientHandleMessage()
+    {
+        m_HandleMap = new OnHandleOneMessga[NetOpcodes_S2CEnmu.MAX];
+        m_HandleMap[NetOpcodes_S2CEnmu.S2C_TEST] = new OnHandleOneMessga(HandleTest);
+        m_HandleMap[NetOpcodes_S2CEnmu.S2C_CREATERESP] = new OnHandleOneMessga(HandleCreateResp);
+    }
+
+    void HandleTest(CNetRecvMsg msg)
+    {
+        PBString pbString = msg.DeSerializeProtocol<net_protocol.PBString>();
+        Debug.Log(pbString.str_value);
+        Client.Instance.DoTest(pbString.str_value);
+    }
+
+    void HandleCreateResp(CNetRecvMsg msg)
+    {
+        Debug.Log("HandleCreateResp");
     }
 }

@@ -124,12 +124,16 @@ namespace GEM_NET_LIB
             switch (e.LastOperation)
             {
                 case SocketAsyncOperation.Connect:
+                    ProcessConnect(e);
                     break;
                 case SocketAsyncOperation.Send:
+                    ProcessSend(e);
                     break;
                 case SocketAsyncOperation.Receive:
+                    ProcessReceive(e);
                     break;
                 case SocketAsyncOperation.Disconnect:
+                    Disconnect();
                     break;
             }
         }
@@ -173,8 +177,9 @@ namespace GEM_NET_LIB
             }
         }
 
-        void PricessReceive(SocketAsyncEventArgs e)
+        void ProcessReceive(SocketAsyncEventArgs e)
         {
+            Debug.Log("success  ");
             if (e.SocketError == SocketError.Success)
             {
                 if (e.BytesTransferred > 0)
@@ -387,12 +392,13 @@ namespace GEM_NET_LIB
         }
         bool Send(byte[] bytes) 
         {
+            Debug.Log("send");
             try
             {
                 mAsyncArgs.SetBuffer(bytes, 0, bytes.Length);
                 if(m_ClientSocket.SendAsync(mAsyncArgs) == false)
                 {
-
+                    Debug.Log("send error");
                 }
                 return true;
             }
