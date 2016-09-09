@@ -173,17 +173,38 @@ public class NetOpcodes_S2CEnmu
     public static readonly int MAX = 64;
 }
 
-public class NetOpcodes_S2CString :Signleton<NetOpcodes_S2CString>
+public class NetOpcodes_S2CString : Signleton<NetOpcodes_S2CString>
 {
-    private Dictionary<int ,string> m_StringMap = new Dictionary<int,string>();
-    public bool GetString(int msgID,out string strOut)
+    private Dictionary<int, string> m_StringMap = new Dictionary<int, string>();
+    public bool GetString(int msgID, out string strOut)
     {
         return m_StringMap.TryGetValue(msgID, out strOut);
     }
-   public  NetOpcodes_S2CString()
+    public NetOpcodes_S2CString()
     {
         m_StringMap.Add(1, "S2C_TEST");
         m_StringMap.Add(2, "S2C_CREATERESP");
+    }
+}
+
+public class NetOpcodes_C2SEnmu
+{
+    public static readonly int C2S_TEST = 1;
+    public static readonly int C2S_CREATERE = 2;
+    public static readonly int MAX = 64;
+}
+
+public class NetOpcodes_C2SString : Signleton<NetOpcodes_C2SString>
+{
+    private Dictionary<int, string> m_StringMap = new Dictionary<int, string>();
+    public bool GetString(int msgID, out string strOut)
+    {
+        return m_StringMap.TryGetValue(msgID, out strOut);
+    }
+    public NetOpcodes_C2SString()
+    {
+        m_StringMap.Add(1, "C2S_TEST");
+        m_StringMap.Add(2, "C2S_CREATERE");
     }
 }
 
@@ -224,5 +245,12 @@ public class CClientHandleMessage :ILogicHandleMessage
     void HandleCreateResp(CNetRecvMsg msg)
     {
         Debug.Log("HandleCreateResp");
+        PBInt pbInt = msg.DeSerializeProtocol<PBInt>();
+        Client.Instance.DoCreate(pbInt.int_value);
+    }
+
+    void HandleReadyReso(CNetRecvMsg msg)
+    {
+
     }
 }

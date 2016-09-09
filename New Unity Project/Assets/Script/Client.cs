@@ -12,14 +12,25 @@ using GEM_NET_LIB;
 
         public delegate void OnTest(string str);
         public event OnTest Test;
-
         public void DoTest(string str)
         {
-            if(Test!=null)
+            if (Test != null)
             {
                 Test(str);
             }
         }
+
+        public delegate void OnCreate(int str);
+        public event OnCreate Create;
+
+        public void DoCreate(int value)
+        {
+            if (Create != null)
+            {
+                Create(value);
+            }
+        }
+
 
         public void Init()
         {

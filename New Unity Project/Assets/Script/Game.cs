@@ -6,9 +6,9 @@ using UnityEngine.SceneManagement;
 
 public enum DIRECTION
 {
-    EAST,
-    WEST,
-    SOUTH,
+    WEST=0,
+    SOUTH=1,
+    EAST=3,
 }
 
 public enum STATUS
@@ -60,6 +60,7 @@ public class Game
     public  Player Player3;
     private  List<poker> pokers = new List<poker>();
     private int BeiShu = 0;
+    public List<Player> listPlayer = new List<Player>(3);
     private PokerData beforPoker;
     public int CurBeishu = 0;
 
